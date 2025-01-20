@@ -1,10 +1,10 @@
-import Demo from "./components/Demo";
+import Chat from "./components/Chat";
 
 export default function Home() {
 
     return (
       <div>
-        <Demo/>
+        <Chat/>
       </div>
     );
 }

@@ -1,32 +1,16 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 
-interface OpenAIRealtimeWebRTCContextType{
-    // WebRTC state
-    isConnected: boolean; // Connection status
-    remoteStream: MediaStream | null; // Incoming media stream
-    dataChannel: RTCDataChannel | null; // Data channel for sending/receiving messages
-  
-    // API for developers
-    sendMessage: (message: string) => void; // Send messages to OpenAI
-    startSession: () => Promise<void>; // Start a new WebRTC session
-    endSession: () => void; // End the current WebRTC session
-}
-
-// Define context type
 interface OpenAIRealtimeWebRTCContextType {
   isConnected: boolean;
   remoteStream: MediaStream | null;
-  dataChannel: RTCDataChannel | null;
-  sendMessage: (message: string) => void;
+  sendTextMessage: (message: string) => void;
   startSession: () => Promise<void>;
   endSession: () => void;
 }
 
-// Create context
 const OpenAIRealtimeWebRTCContext = createContext<OpenAIRealtimeWebRTCContextType | undefined>(undefined);
 
-// Provider Component
 export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
@@ -35,37 +19,45 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
   const peerConnection = useRef<RTCPeerConnection | null>(null);
   const tokenRef = useRef<string | null>(null);
 
-  // Function to fetch ephemeral token
   const fetchToken = async (): Promise<string> => {
     const response = await fetch("/api/session", { method: "POST" });
     const data = await response.json();
     return data.client_secret.value;
   };
 
-  // Function to start a session
   const startSession = async () => {
-    // Fetch token
     tokenRef.current = await fetchToken();
-
-    // Create peer connection
     const pc = new RTCPeerConnection();
 
-    // Get audio stream from the microphone
     const localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-    // Add the audio track to the peer connection
     localStream.getAudioTracks().forEach((track) => pc.addTrack(track, localStream));
 
-    peerConnection.current = pc;
-
-    // Handle remote streams
     pc.ontrack = (event) => setRemoteStream(event.streams[0]);
 
-    // Set up data channel
     const dc = pc.createDataChannel("oai-events");
     setDataChannel(dc);
 
-    // Create SDP offer and exchange with OpenAI
+    // Add event listeners for the data channel
+    dc.addEventListener("open", () => {
+      console.log("Data channel is open.");
+      setIsConnected(true);
+    });
+
+    dc.addEventListener("message", (e) => {
+      try {
+        const serverEvent = JSON.parse(e.data);
+        console.log("Received server event:", serverEvent);
+      } catch (error) {
+        console.error("Failed to parse server event:", error);
+      }
+    });
+
+    dc.addEventListener("close", () => {
+      console.warn("Data channel closed.");
+      setDataChannel(null);
+      setIsConnected(false);
+    });
+
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
 
@@ -78,50 +70,71 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
       },
     });
 
-    const answer = {
-      type: "answer" as RTCSdpType,
-      sdp: await response.text(),
-    };
+    const answer = { type: "answer" as RTCSdpType, sdp: await response.text() };
     await pc.setRemoteDescription(answer);
 
-    setIsConnected(true);
+    peerConnection.current = pc;
   };
 
-  // Function to end the session
   const endSession = () => {
+    dataChannel?.close();
     peerConnection.current?.close();
-    peerConnection.current = null;
     setIsConnected(false);
     setRemoteStream(null);
     setDataChannel(null);
+    peerConnection.current = null;
   };
 
-  // Function to send messages
-  const sendMessage = (message: string) => {
-    dataChannel?.send(message);
+  const sendClientEvent = (event: any) => {
+    if (!dataChannel || dataChannel.readyState !== "open") {
+      console.error("Data channel is not open. Cannot send event.");
+      return;
+    }
+
+    event.event_id = event.event_id || crypto.randomUUID();
+    dataChannel.send(JSON.stringify(event));
+    console.log("Sent event:", event);
   };
 
-  // Token renewal every 25 minutes
+  const sendTextMessage = (message: string) => {
+    const event = {
+      type: "conversation.item.create",
+      item: {
+        type: "message",
+        role: "user",
+        content: [
+          {
+            type: "input_text",
+            text: message,
+          },
+        ],
+      },
+    };
+
+    sendClientEvent(event);
+    sendClientEvent({ type: "response.create" });
+  };
+
   useEffect(() => {
     const interval = setInterval(async () => {
       if (isConnected) {
         tokenRef.current = await fetchToken();
+        console.log("Token refreshed.");
       }
-    }, 25 * 60 * 1000); // 25 minutes
+    }, 25 * 60 * 1000);
 
     return () => clearInterval(interval);
   }, [isConnected]);
 
   return (
     <OpenAIRealtimeWebRTCContext.Provider
-      value={{ isConnected, remoteStream, dataChannel, sendMessage, startSession, endSession }}
+      value={{ isConnected, remoteStream, sendTextMessage, startSession, endSession }}
     >
       {children}
     </OpenAIRealtimeWebRTCContext.Provider>
   );
 };
 
-// Custom Hook
 export const useOpenAIRealtimeWebRTC = (): OpenAIRealtimeWebRTCContextType => {
   const context = useContext(OpenAIRealtimeWebRTCContext);
   if (!context) {
