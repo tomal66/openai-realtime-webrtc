@@ -4,16 +4,6 @@ This project provides a seamless integration between **WebRTC** and the **OpenAI
 
 ---
 
-## Features
-
-- 🔗 **WebRTC Abstraction**: Simplifies WebRTC connection setup and event handling.
-- 🎙️ **Realtime OpenAI API Integration**: Supports text and audio interactions with GPT-4o models.
-- ⚡ **Efficient Backend**: Secure token generation and signaling using Next.js API routes.
-- 💅 **TailwindCSS Styling**: Rapid UI development with customizable components.
-- ✅ **TypeScript Ready**: Fully typed for safer and more predictable development.
-
----
-
 ## Getting Started
 
 ### 1. Clone the Repository
