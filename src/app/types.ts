@@ -14,36 +14,42 @@ export enum Voice {
     VERSE = "verse",
   }
   
-  // Supported input/output audio formats.
+  /**
+   * Supported input/output audio formats.
+   */
   export enum AudioFormat {
     PCM16 = "pcm16",
     G711_ULAW = "g711_ulaw",
     G711_ALAW = "g711_alaw",
   }
   
-  // Supported turn detection types.
+  /**
+   * Supported turn detection types.
+   */
   export enum TurnDetectionType {
     SERVER_VAD = "server_vad",
   }
   
-  // Supported tool choice options for the model.
+  /**
+   * Supported tool choice options for the model.
+   */
   export enum ToolChoice {
     AUTO = "auto",
     NONE = "none",
     REQUIRED = "required",
   }
   
-  // Enum for modalities the model supports.
+  /**
+   * Enum for modalities the model supports.
+   */
   export enum Modality {
     AUDIO = "audio",
     TEXT = "text",
   }
   
   /**
-   * Interfaces for nested objects used in the session configuration.
+   * Configuration for input audio transcription.
    */
-  
-  // Configuration for input audio transcription.
   export interface AudioTranscriptionConfig {
     /**
      * The transcription model to use.
@@ -52,7 +58,9 @@ export enum Voice {
     model: "whisper-1";
   }
   
-  // Configuration for turn detection.
+  /**
+   * Configuration for turn detection.
+   */
   export interface TurnDetectionConfig {
     /**
      * Type of turn detection (e.g., server VAD).
@@ -79,7 +87,9 @@ export enum Voice {
     silenceDurationMs?: number;
   }
   
-  // Definition of a tool (function) available to the model.
+  /**
+   * Definition of a tool (function) available to the model.
+   */
   export interface Tool {
     /**
      * Type of the tool. Always set to "function".
@@ -200,45 +210,65 @@ export enum Voice {
        */
       expiresAt: number;
     };
+    /**
+   * The WebRTC peer connection associated with this session.
+   * Used for managing the connection lifecycle.
+   */
+    peerConnection?: RTCPeerConnection | null;
+
+    /**
+     * The WebRTC data channel associated with this session.
+     * Used for sending and receiving data.
+     */
+    dataChannel?: RTCDataChannel | null;
+
+    /**
+     * Indicates whether the session is in the process of being established.
+     */
+    isConnecting?: boolean;
+
+    /**
+     * Indicates whether the session is successfully connected and ready for use.
+     */
+    isConnected?: boolean;
   }
-
-/**
- * Type definition for the request body to create a new session in the OpenAI Realtime API.
- * Extends the `RealtimeSession` type to reuse shared properties.
- */
-export interface CreateSessionRequestBody
-  extends Partial<Omit<RealtimeSession, "id" | "object" | "clientSecret">> {
+  
   /**
-   * The Realtime model to use for this session (e.g., GPT-4 Realtime Preview).
-   * This is optional during session creation.
+   * Type definition for the request body to create a new session in the OpenAI Realtime API.
    */
-  model?: string;
-
+  export interface CreateSessionRequestBody
+    extends Partial<Omit<RealtimeSession, "id" | "object" | "clientSecret">> {
+    /**
+     * The Realtime model to use for this session (e.g., GPT-4 Realtime Preview).
+     * This is optional during session creation.
+     */
+    model?: string;
+  
+    /**
+     * The modalities the model should respond with (e.g., `["text", "audio"]`).
+     */
+    modalities?: Modality[];
+  
+    /**
+     * Default system instructions (system message) to guide model behavior.
+     */
+    instructions?: string;
+  
+    /**
+     * Optional list of tools (functions) available to the model.
+     */
+    tools?: Tool[];
+  
+    /**
+     * Optional turn detection configuration for managing user interaction.
+     */
+    turnDetection?: TurnDetectionConfig | null;
+  }
+  
   /**
-   * The modalities the model should respond with (e.g., `["text", "audio"]`).
+   * Type definition for the request body of a session update event in the OpenAI Realtime API.
    */
-  modalities?: Modality[];
-
-  /**
-   * Default system instructions (system message) to guide model behavior.
-   */
-  instructions?: string;
-
-  /**
-   * Optional list of tools (functions) available to the model.
-   */
-  tools?: Tool[];
-
-  /**
-   * Optional turn detection configuration for managing user interaction.
-   */
-  turnDetection?: TurnDetectionConfig | null;
-}
-
-/**
- * Type definition for the request body of a session update event in the OpenAI Realtime API.
- */
-export interface UpdateSessionRequest {
+  export interface UpdateSessionRequest {
     /**
      * Optional client-generated ID to identify this event.
      */
@@ -255,6 +285,4 @@ export interface UpdateSessionRequest {
      */
     session: Partial<Omit<RealtimeSession, "id" | "object" | "clientSecret">>;
   }
-  
-  
   
