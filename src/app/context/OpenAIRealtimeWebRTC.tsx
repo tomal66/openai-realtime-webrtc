@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useReducer, useRef } from "react";
+import React, { createContext, useContext, useReducer } from "react";
 import { 
   CreateSessionRequestBody, 
   Modality, 
@@ -71,7 +71,7 @@ const OpenAIRealtimeWebRTCContext = createContext<OpenAIRealtimeWebRTCContextTyp
 const defaultSessionConfig: Partial<CreateSessionRequestBody> = {
   modalities: [Modality.AUDIO, Modality.TEXT], // Supports both text and audio by default
   temperature: 0.8, // Default temperature for balanced randomness
-  maxResponseOutputTokens: "inf", // No token limit by default
+  max_response_output_tokens: "inf", // No token limit by default
 };
 
 // Export the context for use in other components
@@ -260,8 +260,8 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
     }
 
     // Close the peer connection if it exists
-    if (session.peerConnection) {
-      session.peerConnection.close();
+    if (session.peer_connection) {
+      session.peer_connection.close();
       console.log(`Peer connection for session '${sessionId}' closed.`);
     }
 

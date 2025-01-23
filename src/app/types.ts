@@ -78,13 +78,13 @@ export enum Voice {
      * Amount of audio (in milliseconds) to include before the VAD detected speech.
      * Defaults to 300ms.
      */
-    prefixPaddingMs?: number;
+    prefix_padding_ms?: number;
   
     /**
      * Duration of silence (in milliseconds) to detect speech stop.
      * Defaults to 500ms.
      */
-    silenceDurationMs?: number;
+    silence_duration_ms?: number;
   }
   
   /**
@@ -155,24 +155,24 @@ export enum Voice {
     /**
      * Format of the input audio (e.g., PCM16, G711_ULAW).
      */
-    inputAudioFormat?: AudioFormat;
+    input_audio_format?: AudioFormat;
   
     /**
      * Format of the output audio (e.g., PCM16, G711_ALAW).
      */
-    outputAudioFormat?: AudioFormat;
+    output_audio_format?: AudioFormat;
   
     /**
      * Configuration for input audio transcription.
      * Defaults to off and can be set to null to turn off.
      */
-    inputAudioTranscription?: AudioTranscriptionConfig | null;
+    input_audio_transcription?: AudioTranscriptionConfig | null;
   
     /**
      * Configuration for turn detection.
      * Can be set to null to disable turn detection.
      */
-    turnDetection?: TurnDetectionConfig | null;
+    turn_detection?: TurnDetectionConfig | null;
   
     /**
      * List of tools (functions) available to the model.
@@ -182,7 +182,7 @@ export enum Voice {
     /**
      * How the model selects tools (e.g., auto, none, required).
      */
-    toolChoice?: ToolChoice;
+    tool_choice?: ToolChoice;
   
     /**
      * Sampling temperature for response generation.
@@ -194,7 +194,7 @@ export enum Voice {
      * Maximum number of output tokens for a single assistant response.
      * Can be a number (1 to 4096) or "inf" for the maximum.
      */
-    maxResponseOutputTokens?: number | "inf";
+    max_response_output_tokens?: number | "inf";
   
     /**
      * Ephemeral client secret for authenticating connections.
@@ -204,17 +204,17 @@ export enum Voice {
        * The actual ephemeral key value.
        */
       value: string;
-  
+    
       /**
        * Expiration timestamp for the ephemeral key.
        */
-      expiresAt: number;
+      expires_at: number;
     };
     /**
    * The WebRTC peer connection associated with this session.
    * Used for managing the connection lifecycle.
    */
-    peerConnection?: RTCPeerConnection | null;
+    peer_connection?: RTCPeerConnection | null;
 
     /**
      * The WebRTC data channel associated with this session.
@@ -267,7 +267,7 @@ export enum Voice {
     /**
      * Optional turn detection configuration for managing user interaction.
      */
-    turnDetection?: TurnDetectionConfig | null;
+    turn_detection?: TurnDetectionConfig | null;
   }
   
   /**
