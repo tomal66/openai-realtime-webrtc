@@ -1,15 +1,51 @@
 "use client";
+
 import React, { createContext, useContext, useState, useEffect, useRef } from "react";
+import { 
+  CreateSessionRequestBody, 
+  RealtimeSession, 
+} from "../types"
+
 
 interface OpenAIRealtimeWebRTCContextType {
+  /**
+   * Indicates whether the WebRTC connection is established.
+   */
   isConnected: boolean;
+
+  /**
+   * The remote media stream received from the OpenAI API.
+   */
   remoteStream: MediaStream | null;
+
+  /**
+   * Sends a text message to the OpenAI API via the WebRTC connection.
+   */
   sendTextMessage: (message: string) => void;
-  startSession: () => Promise<void>;
+
+  /**
+   * Starts a new WebRTC session with the OpenAI API.
+   */
+  startSession: (config?: Partial<CreateSessionRequestBody>) => Promise<void>;
+
+  /**
+   * Ends the current WebRTC session and cleans up resources.
+   */
   endSession: () => void;
 }
 
+
+// Create the OpenAI Realtime WebRTC context
 const OpenAIRealtimeWebRTCContext = createContext<OpenAIRealtimeWebRTCContextType | undefined>(undefined);
+
+// Export the context for use in other components
+export const useOpenAIRealtimeWebRTC = (): OpenAIRealtimeWebRTCContextType => {
+  const context = useContext(OpenAIRealtimeWebRTCContext);
+  if (!context) {
+    throw new Error("useOpenAIRealtimeWebRTC must be used within an OpenAIRealtimeWebRTCProvider");
+  }
+  return context;
+};
 
 export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
@@ -21,9 +57,10 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
 
   const fetchToken = async (): Promise<string> => {
     const response = await fetch("/api/session", { method: "POST" });
-    const data = await response.json();
-    return data.client_secret.value;
-  };
+    const data: RealtimeSession = await response.json();
+    return data.clientSecret?.value || "";
+};
+  
 
   const startSession = async () => {
     tokenRef.current = await fetchToken();
@@ -39,7 +76,6 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
 
     // Add event listeners for the data channel
     dc.addEventListener("open", () => {
-      console.log("Data channel is open.");
       setIsConnected(true);
     });
 
@@ -93,7 +129,6 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
 
     event.event_id = event.event_id || crypto.randomUUID();
     dataChannel.send(JSON.stringify(event));
-    console.log("Sent event:", event);
   };
 
   const sendTextMessage = (message: string) => {
@@ -119,7 +154,6 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
     const interval = setInterval(async () => {
       if (isConnected) {
         tokenRef.current = await fetchToken();
-        console.log("Token refreshed.");
       }
     }, 25 * 60 * 1000);
 
@@ -133,12 +167,4 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
       {children}
     </OpenAIRealtimeWebRTCContext.Provider>
   );
-};
-
-export const useOpenAIRealtimeWebRTC = (): OpenAIRealtimeWebRTCContextType => {
-  const context = useContext(OpenAIRealtimeWebRTCContext);
-  if (!context) {
-    throw new Error("useOpenAIRealtimeWebRTC must be used within an OpenAIRealtimeWebRTCProvider");
-  }
-  return context;
 };
