@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useReducer } from "react";
 import { 
-  CreateSessionRequestBody, 
+  SessionConfig, 
   Modality, 
   RealtimeSession, 
 } from "../types"
@@ -32,7 +32,7 @@ interface OpenAIRealtimeWebRTCContextType {
    * @param config - Optional session configuration to override defaults.
    * @returns A promise that resolves once the session is successfully started.
    */
-  startSession: (sessionId: string, config?: Partial<CreateSessionRequestBody>) => Promise<void>;
+  startSession: (sessionId: string, config?: Partial<SessionConfig>) => Promise<void>;
 
   /**
    * Ends an active WebRTC session and cleans up its resources.
@@ -68,7 +68,7 @@ const OpenAIRealtimeWebRTCContext = createContext<OpenAIRealtimeWebRTCContextTyp
  * Default session configuration object for starting a WebRTC session.
  * Developers can override these defaults by passing a custom configuration to `startSession`.
  */
-const defaultSessionConfig: Partial<CreateSessionRequestBody> = {
+const defaultSessionConfig: Partial<SessionConfig> = {
   modalities: [Modality.AUDIO, Modality.TEXT], // Supports both text and audio by default
   temperature: 0.8, // Default temperature for balanced randomness
   max_response_output_tokens: "inf", // No token limit by default
@@ -145,7 +145,7 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
 
   const startSession = async (
     sessionId: string = "default",
-    config: Partial<CreateSessionRequestBody> = defaultSessionConfig
+    config: Partial<SessionConfig> = defaultSessionConfig
   ): Promise<void> => {
    // create new session on backend 
    const session =  await (await fetch("/api/session", { method: "POST" })).json() as unknown as RealtimeSession;

@@ -241,7 +241,7 @@ export enum Voice {
   /**
    * Type definition for the request body to create a new session in the OpenAI Realtime API.
    */
-  export interface CreateSessionRequestBody
+  export interface SessionConfig
     extends Partial<Omit<RealtimeSession, "id" | "object" | "clientSecret">> {
     /**
      * The Realtime model to use for this session (e.g., GPT-4 Realtime Preview).
