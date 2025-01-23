@@ -199,7 +199,7 @@ export enum Voice {
     /**
      * Ephemeral client secret for authenticating connections.
      */
-    clientSecret: {
+    client_secret?: {
       /**
        * The actual ephemeral key value.
        */
@@ -231,6 +231,11 @@ export enum Voice {
      * Indicates whether the session is successfully connected and ready for use.
      */
     isConnected?: boolean;
+
+    /**
+     * The local media stream used for audio output.
+     */
+    mediaStream?: MediaStream | null;
   }
   
   /**
