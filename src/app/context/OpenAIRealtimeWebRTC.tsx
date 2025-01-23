@@ -148,7 +148,7 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
     config: Partial<SessionConfig> = defaultSessionConfig
   ): Promise<void> => {
    // create new session on backend 
-   const session =  await (await fetch("/api/session", { method: "POST" })).json() as unknown as RealtimeSession;
+   const session =  await (await fetch("/api/session", { method: "POST", body: JSON.stringify(config) })).json() as unknown as RealtimeSession;
     // Create a new peer connection
     const pc = new RTCPeerConnection();
   
@@ -156,9 +156,7 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
     if (config.modalities?.includes(Modality.AUDIO)) {
       const localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       localStream.getAudioTracks().forEach((track) => pc.addTrack(track, localStream));
-    }
-  
-    // Manage the remote stream
+      // Manage the remote stream
     pc.ontrack = (event) => {
       console.log(`Remote stream received for session '${sessionId}'.`);
       // update the state for this session with event.streams[0] as mediaStream
@@ -170,6 +168,9 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
         },
       });
     };
+    }
+  
+
   
     // Create and manage a data channel
     const dc = pc.createDataChannel(sessionId);

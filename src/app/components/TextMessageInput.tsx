@@ -3,13 +3,13 @@
 import React, { useState } from "react";
 import { useOpenAIRealtimeWebRTC } from "../context/OpenAIRealtimeWebRTC";
 
-const TextMessageInput: React.FC = () => {
+const TextMessageInput: React.FC<{sessionId:string}> = ({sessionId}) => {
   const { sendTextMessage } = useOpenAIRealtimeWebRTC(); // Use the renamed function from context
   const [message, setMessage] = useState("");
 
   const handleSendMessage = () => {
     if (message.trim()) {
-      sendTextMessage(message); // Send the message using the context function
+      sendTextMessage(sessionId,message); // Send the message using the context function
       setMessage(""); // Clear the input field
     }
   };
