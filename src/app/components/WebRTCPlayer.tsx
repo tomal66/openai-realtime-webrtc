@@ -8,22 +8,79 @@ interface WebRTCPlayerProps {
 
 const WebRTCPlayer: React.FC<WebRTCPlayerProps> = ({ remoteStream }) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
     if (audioRef.current && remoteStream) {
-      audioRef.current.srcObject = remoteStream; // Set the media stream as the source
+      // Attach the stream to the audio element
+      audioRef.current.srcObject = remoteStream;
+
+      // Set up the AudioContext and visualization
+      const audioContext = new AudioContext();
+      const source = audioContext.createMediaStreamSource(remoteStream);
+      const analyser = audioContext.createAnalyser();
+      source.connect(analyser);
+
+      // Configure the analyser
+      analyser.fftSize = 128; // Lower FFT size for smoother visualization
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+
+      // Get canvas context for drawing
+      const canvas = canvasRef.current;
+      const canvasContext = canvas?.getContext("2d");
+      if (!canvas || !canvasContext) return;
+
+      // Set canvas size
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+
+      // Draw function
+      const draw = () => {
+        requestAnimationFrame(draw);
+
+        analyser.getByteFrequencyData(dataArray);
+
+        // Clear canvas
+        canvasContext.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw bars with calming colors
+        const barWidth = (canvas.width / bufferLength) * 4; // Wider bars
+        let barHeight;
+        let x = 0;
+
+        for (let i = 0; i < bufferLength; i++) {
+          barHeight = dataArray[i];
+
+          canvasContext.fillStyle = `hsl(${i * 12}, 70%, 60%)`; // Calming gradient
+          canvasContext.fillRect(
+            x,
+            canvas.height - barHeight / 1.5,
+            barWidth - 2, // Add spacing between bars
+            barHeight / 1.5
+          );
+
+          x += barWidth;
+        }
+      };
+
+      draw();
+
+      // Cleanup on unmount
+      return () => {
+        audioContext.close();
+      };
     }
   }, [remoteStream]);
 
+  if (!remoteStream) {
+    return null;
+  }
+
   return (
-    <div className="w-full bg-gray-100 p-4 rounded-lg shadow-md flex items-center space-x-4">
-      {/* Styled audio player */}
-      <audio
-        ref={audioRef}
-        autoPlay
-        controls={false}
-        className="w-full h-10 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500"
-      />
+    <div>
+      <audio ref={audioRef} autoPlay controls={false} />
+      <canvas ref={canvasRef} className="w-full h-64 border rounded shadow" />
     </div>
   );
 };
