@@ -1,4 +1,150 @@
 /**
+ * Enum representing the type of transcript.
+ */
+export enum TranscriptType {
+  INPUT = "input",
+  OUTPUT = "output",
+}
+
+/**
+ * Enum representing the role of a transcript.
+ */
+export enum TranscriptRole {
+  USER = "user",
+  MODEL = "model",
+}
+
+/**
+ * Enum representing all possible event types for the OpenAI Realtime API.
+ */
+export enum RealtimeEventType {
+  // Session events
+  SESSION_CREATED = "session.created",
+  SESSION_UPDATED = "session.updated",
+
+  // Input audio buffer events
+  INPUT_AUDIO_SPEECH_STARTED = "input_audio_buffer.speech_started",
+  INPUT_AUDIO_SPEECH_STOPPED = "input_audio_buffer.speech_stopped",
+  INPUT_AUDIO_COMMITTED = "input_audio_buffer.committed",
+  INPUT_AUDIO_CLEARED = "input_audio_buffer.cleared",
+
+  // Conversation events
+  CONVERSATION_ITEM_CREATED = "conversation.item.created",
+  CONVERSATION_ITEM_INPUT_AUDIO_TRANSCRIPTION_COMPLETED = "conversation.item.input_audio_transcription.completed",
+  CONVERSATION_ITEM_DELETED = "conversation.item.deleted",
+
+  // Response events
+  RESPONSE_CREATED = "response.created",
+  RESPONSE_OUTPUT_ITEM_ADDED = "response.output_item.added",
+  RESPONSE_AUDIO_TRANSCRIPT_DELTA = "response.audio_transcript.delta",
+  RESPONSE_AUDIO_TRANSCRIPT_DONE = "response.audio_transcript.done",
+  RESPONSE_CONTENT_PART_DONE = "response.content_part.done",
+  RESPONSE_DONE = "response.done",
+  RESPONSE_CANCELLED = "response.cancelled",
+
+  // Output audio buffer events
+  OUTPUT_AUDIO_STARTED = "output_audio_buffer.audio_started",
+  OUTPUT_AUDIO_STOPPED = "output_audio_buffer.audio_stopped",
+
+  // Rate limit updates
+  RATE_LIMITS_UPDATED = "rate_limits.updated",
+}
+
+/**
+ * Base interface for all OpenAI WebRTC events.
+ */
+interface BaseRealtimeEvent {
+  /**
+   * Type of the event (e.g., input transcription, response).
+   */
+  type: RealtimeEventType;
+
+  /**
+   * Unique identifier for the event.
+   */
+  event_id: string;
+
+  /**
+   * Timestamp of the event (optional for debugging/logging purposes).
+   */
+  timestamp?: number;
+}
+
+
+/**
+ * Event for input transcription completed.
+ */
+interface InputAudioTranscriptionCompletedEvent extends BaseRealtimeEvent {
+  type: RealtimeEventType.CONVERSATION_ITEM_INPUT_AUDIO_TRANSCRIPTION_COMPLETED;
+  item_id: string;
+  content_index: number;
+  transcript: string;
+}
+
+/**
+ * Event for response audio transcript done.
+ */
+interface ResponseAudioTranscriptDoneEvent extends BaseRealtimeEvent {
+  type: RealtimeEventType.RESPONSE_AUDIO_TRANSCRIPT_DONE;
+  response_id: string;
+  item_id: string;
+  output_index: number;
+  content_index: number;
+  transcript: string;
+}
+
+/**
+ * Event for response creation.
+ */
+interface ResponseCreatedEvent extends BaseRealtimeEvent {
+  type: RealtimeEventType.RESPONSE_CREATED;
+  response: unknown; // Replace with a detailed type if you have it
+}
+
+/**
+ * Event for response done.
+ */
+interface ResponseDoneEvent extends BaseRealtimeEvent {
+  type: RealtimeEventType.RESPONSE_DONE;
+  response: unknown; // Replace with a detailed type if you have it
+}
+
+/**
+ * Union type for all OpenAI WebRTC events.
+ */
+export type RealtimeEvent =
+  | InputAudioTranscriptionCompletedEvent
+  | ResponseAudioTranscriptDoneEvent
+  | ResponseCreatedEvent
+  | ResponseDoneEvent;
+
+/**
+ * Interface representing a transcript in a session.
+ */
+export interface Transcript {
+  /**
+   * The textual content of the transcript.
+   */
+  content: string;
+
+  /**
+   * The timestamp when the transcript was created, in milliseconds since Unix epoch.
+   */
+  timestamp: number;
+
+  /**
+   * Indicates whether the transcript is an input from the user or an output from the model.
+   */
+  type: TranscriptType;
+
+  /**
+   * The role associated with the transcript, either "user" (input) or "model" (output).
+   */
+  role: TranscriptRole;
+}
+
+
+/**
  * Enums for fixed string values used in the session configuration.
  */
 
@@ -111,7 +257,7 @@ export enum Voice {
      */
     parameters: {
       type: "object";
-      properties: Record<string, any>;
+      properties: Record<string, unknown>;
       required: string[];
     };
   }
@@ -236,6 +382,12 @@ export enum Voice {
      * The local media stream used for audio output.
      */
     mediaStream?: MediaStream | null;
+
+    /**
+     * List of all transcripts associated with this session.
+     * Each transcript includes details such as content, timestamp, type, and role.
+    */
+    transcripts: Transcript[];
   }
   
   /**

@@ -2,9 +2,13 @@
 
 import React, { createContext, useContext, useReducer } from "react";
 import { 
-  SessionConfig, 
+  Transcript,
   Modality, 
-  RealtimeSession, 
+  RealtimeSession,
+  RealtimeEventType,
+  TranscriptType,
+  TranscriptRole,
+  RealtimeEvent,
 } from "../types"
 
 
@@ -56,7 +60,7 @@ interface OpenAIRealtimeWebRTCContextType {
    * @param sessionId - The unique identifier for the session to send the event to.
    * @param event - The custom event payload.
    */
-  sendClientEvent: (sessionId: string, event: any) => void;
+  sendClientEvent: (sessionId: string, event: RealtimeEvent) => void;
 
 }
 
@@ -64,15 +68,6 @@ interface OpenAIRealtimeWebRTCContextType {
 // Create the OpenAI Realtime WebRTC context
 const OpenAIRealtimeWebRTCContext = createContext<OpenAIRealtimeWebRTCContextType | undefined>(undefined);
 
-/**
- * Default session configuration object for starting a WebRTC session.
- * Developers can override these defaults by passing a custom configuration to `startSession`.
- */
-const defaultSessionConfig: Partial<SessionConfig> = {
-  modalities: [Modality.AUDIO, Modality.TEXT], // Supports both text and audio by default
-  temperature: 0.8, // Default temperature for balanced randomness
-  max_response_output_tokens: "inf", // No token limit by default
-};
 
 // Export the context for use in other components
 export const useOpenAIRealtimeWebRTC = (): OpenAIRealtimeWebRTCContextType => {
@@ -88,6 +83,7 @@ export enum SessionActionType {
   ADD_SESSION = "ADD_SESSION",
   REMOVE_SESSION = "REMOVE_SESSION",
   UPDATE_SESSION = "UPDATE_SESSION",
+  ADD_TRANSCRIPT = "ADD_TRANSCRIPT",
 }
 
 // Action interfaces for type safety
@@ -106,8 +102,13 @@ interface UpdateSessionAction {
   payload: Partial<RealtimeSession> & { id: string }; // Allow partial updates, must include `id`
 }
 
+interface AddTranscriptAction {
+  type: SessionActionType.ADD_TRANSCRIPT;
+  payload: { sessionId: string; transcript: Transcript };
+}
+
 // Union type for all actions
-type SessionAction = AddSessionAction | RemoveSessionAction | UpdateSessionAction;
+type SessionAction = AddSessionAction | RemoveSessionAction | UpdateSessionAction | AddTranscriptAction;
 
 // Reducer state type
 type ChannelState = RealtimeSession[];
@@ -125,6 +126,15 @@ export const sessionReducer = (state: ChannelState, action: SessionAction): Chan
       return state.map((session) =>
         session.id === action.payload.id
           ? { ...session, ...action.payload } // Merge updates with existing session
+          : session
+      );
+    case SessionActionType.ADD_TRANSCRIPT:
+      return state.map((session) =>
+        session.id === action.payload.sessionId
+          ? {
+              ...session,
+              transcripts: [...(session.transcripts || []), action.payload.transcript],
+            }
           : session
       );
 
@@ -199,8 +209,52 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
       console.log(`Data channel for session '${sessionId}' is open.`);
     });
   
-    dc.addEventListener("message", (e) => {
+    dc.addEventListener("message", (e: MessageEvent<string>) => {
       console.log(`Message received on session '${sessionId}':`, e.data);
+      const event: RealtimeEvent = JSON.parse(e.data) as unknown as RealtimeEvent;
+      switch (event.type) {
+        /**
+         * Triggered when an input audio transcription is completed.
+         * This event provides the final transcript for the user's audio input.
+        */
+        case RealtimeEventType.CONVERSATION_ITEM_INPUT_AUDIO_TRANSCRIPTION_COMPLETED:
+          dispatch({
+            type: SessionActionType.ADD_TRANSCRIPT,
+            payload: {
+             sessionId,
+              transcript: 
+                {
+                  content: event.transcript,
+                  timestamp: Date.now(),
+                  type: TranscriptType.INPUT,
+                  role: TranscriptRole.USER,
+                },
+            },
+          });
+          break;
+        /**
+         * Triggered when an assistant's audio response transcription is finalized.
+         * This event provides the final transcript for the assistant's audio output.
+         */
+        case RealtimeEventType.RESPONSE_AUDIO_TRANSCRIPT_DONE:
+          dispatch({
+            type: SessionActionType.ADD_TRANSCRIPT,
+            payload: {
+              sessionId,
+              transcript:
+                {
+                  content: event.transcript,
+                  timestamp: Date.now(),
+                  type: TranscriptType.OUTPUT,
+                  role: TranscriptRole.MODEL,
+                },
+            },
+          });
+          break;
+    
+        default:
+          break;
+      }
     });
   
     dc.addEventListener("close", () => {
@@ -268,7 +322,7 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
    * @param sessionId - The unique identifier of the session to send the event to.
    * @param event - The event object to be sent.
    */
-  const sendClientEvent = (sessionId: string, event: any): void => {
+  const sendClientEvent = (sessionId: string, event: RealtimeEvent): void => {
     // Find the session by ID
     const session = sessions.find((s) => s.id === sessionId);
 
