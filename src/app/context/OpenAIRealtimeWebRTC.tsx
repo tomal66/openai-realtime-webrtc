@@ -29,10 +29,10 @@ interface OpenAIRealtimeWebRTCContextType {
    * Starts a new WebRTC session with the OpenAI API.
    *
    * @param sessionId - The unique identifier for the new session.
-   * @param config - Optional session configuration to override defaults.
+   * @param realtimeSession - The session object containing configuration.
    * @returns A promise that resolves once the session is successfully started.
    */
-  startSession: (sessionId: string, config?: Partial<SessionConfig>) => Promise<void>;
+  startSession: (realtimeSession: RealtimeSession) => Promise<void>;
 
   /**
    * Ends an active WebRTC session and cleans up its resources.
@@ -144,16 +144,14 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
   };
 
   const startSession = async (
-    sessionId: string = "default",
-    config: Partial<SessionConfig> = defaultSessionConfig
+    realtimeSession: RealtimeSession,
   ): Promise<void> => {
-   // create new session on backend 
-   const session =  await (await fetch("/api/session", { method: "POST", body: JSON.stringify(config) })).json() as unknown as RealtimeSession;
+    const sessionId = realtimeSession.id;
     // Create a new peer connection
     const pc = new RTCPeerConnection();
   
     // Attach local audio stream if AUDIO modality is enabled
-    if (config.modalities?.includes(Modality.AUDIO)) {
+    if (realtimeSession.modalities?.includes(Modality.AUDIO)) {
       const localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       localStream.getAudioTracks().forEach((track) => pc.addTrack(track, localStream));
       // Manage the remote stream
@@ -179,13 +177,10 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
     dispatch({
       type: SessionActionType.ADD_SESSION,
       payload: {
-        id: sessionId,
-        object: "realtime.session",
-        model: config.model || "default-model",
-        modalities: config.modalities || defaultSessionConfig.modalities!,
+        ...realtimeSession,
         peerConnection: pc,
         dataChannel: dc,
-        tokenRef: session?.client_secret?.value,
+        tokenRef: realtimeSession?.client_secret?.value,
         isConnecting: true,
         isConnected: false,
       } as RealtimeSession,
@@ -193,6 +188,14 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
   
     // Add event listeners to handle data channel lifecycle
     dc.addEventListener("open", () => {
+      dispatch({
+        type: SessionActionType.UPDATE_SESSION,
+        payload: {
+          id: sessionId,
+          isConnecting: false,
+          isConnected: true,
+        } as RealtimeSession,
+      });
       console.log(`Data channel for session '${sessionId}' is open.`);
     });
   
@@ -215,23 +218,11 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
         method: "POST",
         body: offer.sdp,
         headers: {
-          Authorization: `Bearer ${session.client_secret?.value}`,
+          Authorization: `Bearer ${realtimeSession.client_secret?.value}`,
           "Content-Type": "application/sdp",
         },
       }
     );
-  
-
-    // Update the session with the full session object and set the connection flags
-    dispatch({
-      type: SessionActionType.UPDATE_SESSION,
-      payload: {
-        ...session,
-        id: sessionId,
-        isConnecting: false,
-        isConnected: true,
-      },
-    });
   
     // Apply the SDP answer from the response
     const answer = { type: "answer" as RTCSdpType, sdp: await response.text() };

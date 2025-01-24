@@ -4,7 +4,7 @@ import React from "react";
 import WebRTCPlayer from "./WebRTCPlayer";
 import TextMessageInput from "./TextMessageInput";
 import { useOpenAIRealtimeWebRTC } from "../context/OpenAIRealtimeWebRTC";
-import { SessionConfig, Modality } from "../types";
+import { SessionConfig, Modality, RealtimeSession } from "../types";
 
 const sessionConfig: SessionConfig = {
   modalities: [Modality.TEXT, Modality.AUDIO],
@@ -12,13 +12,25 @@ const sessionConfig: SessionConfig = {
    You are a fortune teller. You can see the future.
   `,
 };
-const SESSION_ID = "My Session ID";
+
+async function createNewSession(){
+  const session =  await (await fetch("/api/session", { method: "POST", body: JSON.stringify(sessionConfig) })).json() as unknown as RealtimeSession;
+  return session;
+}
 
 const Chat: React.FC = () => {
- 
-  const { startSession, getSessionById, closeSession } =
+  const [sessionId ,setSessionId] = React.useState<string>("");
+  const { startSession, closeSession, getSessionById } =
     useOpenAIRealtimeWebRTC();
-  const session = getSessionById(SESSION_ID);
+  
+
+  async function onSessionStart(){
+    const newSession = await createNewSession();
+    startSession({...newSession});
+    setSessionId(newSession.id);
+  }
+
+  const session = getSessionById(sessionId);
   return (
     <div className="w-full max-w-2xl mx-auto p-4 bg-white rounded-lg shadow-lg space-y-6">
       {/* Header Section */}
@@ -27,14 +39,14 @@ const Chat: React.FC = () => {
         <div>
           {session?.isConnected ? (
             <button
-              onClick={() => closeSession(SESSION_ID)}
+              onClick={() => closeSession(sessionId)}
               className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
             >
               End Session
             </button>
           ) : (
             <button
-              onClick={() => startSession(SESSION_ID, sessionConfig)}
+              onClick={() => onSessionStart()}
               className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
             >
               Start Session
@@ -51,7 +63,7 @@ const Chat: React.FC = () => {
       {/* Text Message Input */}
       {session?.modalities?.includes(Modality.TEXT) && (
         <div className="border-t pt-4">
-          <TextMessageInput sessionId={SESSION_ID}/>
+          <TextMessageInput sessionId={sessionId}/>
         </div>
       )}
     </div>
