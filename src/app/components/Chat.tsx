@@ -6,6 +6,7 @@ import TextMessageInput from "./TextMessageInput";
 import PushToTalk from "./PushToTalk";
 import { useOpenAIRealtimeWebRTC } from "../context/OpenAIRealtimeWebRTC";
 import { SessionConfig, Modality, TurnDetectionConfig } from "../types";
+import tools from "./openAITools";
 
 const defaultTurnDetection: TurnDetectionConfig = {
   type: "server_vad",
@@ -16,7 +17,7 @@ const defaultTurnDetection: TurnDetectionConfig = {
 
 const Chat: React.FC = () => {
   const [sessionId, setSessionId] = useState<string>("");
-  const [mode, setMode] = useState<"vad" | "push-to-talk">("vad"); // State for mode
+  const [mode, setMode] = useState<"vad" | "push-to-talk">("vad");
   const [config, setConfig] = useState<SessionConfig>({
     modalities: [Modality.TEXT, Modality.AUDIO],
     input_audio_transcription: {
@@ -25,11 +26,16 @@ const Chat: React.FC = () => {
     instructions: `
       You are a fortune teller. You can see the future.
     `,
-    turn_detection: defaultTurnDetection, // Default to VAD
+    turn_detection: defaultTurnDetection,
+    tools,
   });
 
-  const { startSession, closeSession, getSessionById, sendClientEvent } =
-    useOpenAIRealtimeWebRTC();
+  const {
+    startSession,
+    closeSession,
+    getSessionById,
+    sendClientEvent,
+  } = useOpenAIRealtimeWebRTC();
 
   async function createNewSession(updatedConfig: SessionConfig) {
     const session = await (
@@ -43,7 +49,7 @@ const Chat: React.FC = () => {
 
   async function onSessionStart() {
     const newSession = await createNewSession(config);
-    startSession({ ...newSession });
+    startSession({ ...newSession }, handleFunctionCall);
     setSessionId(newSession.id);
   }
 
@@ -52,14 +58,12 @@ const Chat: React.FC = () => {
   const handleModeChange = (newMode: "vad" | "push-to-talk") => {
     setMode(newMode);
 
-    // Update the config for the selected mode
     const updatedConfig: SessionConfig = {
       ...config,
-      turn_detection: newMode === "vad" ? defaultTurnDetection : null, // Enable VAD for "vad", disable for "push-to-talk"
+      turn_detection: newMode === "vad" ? defaultTurnDetection : null,
     };
     setConfig(updatedConfig);
 
-    // Dynamically update session if already active
     if (sessionId && session?.isConnected) {
       sendClientEvent(sessionId, {
         type: "session.update",
@@ -68,6 +72,46 @@ const Chat: React.FC = () => {
         },
       });
     }
+  };
+
+  /**
+   * Function call handler for handling model-triggered functions.
+   * @param name - The name of the function being called.
+   * @param args - The arguments passed to the function.
+   */
+  const handleFunctionCall = (name: string, args: Record<string, unknown>) => {
+    console.log(`Function call received: ${name}`, args);
+
+    switch (name) {
+      case "change_background":
+        handleChangeBackground(args.color as string);
+        break;
+
+      case "zoom_content":
+        handleZoomContent(args.zoomLevel as number);
+        break;
+
+      default:
+        console.warn(`Unhandled function call: ${name}`);
+    }
+  };
+
+  /**
+   * Changes the background color of the application.
+   * @param color - The color to set as the background.
+   */
+  const handleChangeBackground = (color: string) => {
+    document.body.style.backgroundColor = color;
+    console.log(`Background color changed to: ${color}`);
+  };
+
+  /**
+   * Zooms in or out of the application content.
+   * @param zoomLevel - The zoom level to apply.
+   */
+  const handleZoomContent = (zoomLevel: number) => {
+    document.body.style.transform = `scale(${zoomLevel})`;
+    console.log(`Content zoomed to level: ${zoomLevel}`);
   };
 
   return (
@@ -79,7 +123,9 @@ const Chat: React.FC = () => {
           {/* Mode Switcher */}
           <select
             value={mode}
-            onChange={(e) => handleModeChange(e.target.value as "vad" | "push-to-talk")}
+            onChange={(e) =>
+              handleModeChange(e.target.value as "vad" | "push-to-talk")
+            }
             className="border border-gray-300 rounded px-2 py-1 bg-white text-gray-700"
           >
             <option value="vad">VAD</option>
@@ -111,7 +157,7 @@ const Chat: React.FC = () => {
           <WebRTCPlayer remoteStream={session?.mediaStream} />
         )}
       </div>
-      
+
       {/* Error Section */}
       {session?.errors && session.errors.length > 0 && (
         <div className="border-t pt-4">
@@ -148,13 +194,12 @@ const Chat: React.FC = () => {
         </div>
       )}
 
-
       {/* Transcripts Box */}
       {session?.transcripts && session?.transcripts?.length > 0 && (
         <div className="overflow-y-auto h-64 border rounded p-4 bg-gray-50">
           {session?.transcripts
-            .slice() // Make a copy of the transcripts array
-            .reverse() // Reverse the array to show the latest on top
+            .slice()
+            .reverse()
             .map((transcript, index) => (
               <div
                 key={index}
@@ -183,7 +228,8 @@ const Chat: React.FC = () => {
             <PushToTalk sessionId={sessionId} />
           ) : (
             <p className="text-gray-600 text-sm italic">
-              Voice Activity Detection (VAD) mode enabled. Start speaking to interact.
+              Voice Activity Detection (VAD) mode enabled. Start speaking to
+              interact.
             </p>
           )}
         </div>

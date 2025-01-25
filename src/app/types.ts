@@ -95,7 +95,7 @@ export interface FunctionCallDetails {
 }
 
 // Conversation item structure
-export interface ConversationItem {
+export interface ConversationItem extends FunctionCallDetails {
   /**
    * Unique ID of the item. If not provided, the server will generate one.
    */
@@ -125,11 +125,6 @@ export interface ConversationItem {
    * Content of the message. Applicable only for message items.
    */
   content?: ConversationContent[];
-
-  /**
-   * Function call details (for function_call and function_call_output items).
-   */
-  function_call_details?: FunctionCallDetails;
 }
 
 /**
@@ -161,6 +156,7 @@ export enum RealtimeEventType {
   RESPONSE_CONTENT_PART_DONE = "response.content_part.done",
   RESPONSE_DONE = "response.done",
   RESPONSE_CANCELLED = "response.cancelled",
+  RESPONSE_OUTPUT_ITEM_DONE= "response.output_item.done",
 
   // Output audio buffer events
   OUTPUT_AUDIO_STARTED = "output_audio_buffer.audio_started",
@@ -398,6 +394,59 @@ export interface ConversationItemCreateEvent extends BaseRealtimeEvent {
     function_call_details?: FunctionCallDetails;
   };
 }
+
+/**
+ * Event for when a response output item is done.
+ */
+export interface ResponseOutputItemDoneEvent extends BaseRealtimeEvent {
+  type: RealtimeEventType.RESPONSE_OUTPUT_ITEM_DONE;
+
+  /**
+   * The ID of the response associated with this output item.
+   */
+  response_id: string;
+
+  /**
+   * The index of the output item in the response.
+   */
+  output_index: number;
+
+  /**
+   * Details of the completed output item.
+   */
+  item: {
+    /**
+     * Unique ID of the output item.
+     */
+    id: string;
+
+    /**
+     * Object type, always "realtime.item".
+     */
+    object: "realtime.item";
+
+    /**
+     * The type of the item, such as "function_call", "message", etc.
+     */
+    type: ConversationItemType;
+
+    /**
+     * The status of the item, typically "completed".
+     */
+    status: ConversationItemStatus;
+
+    /**
+     * Role associated with the item, e.g., "assistant" or "user" (if applicable).
+     */
+    role?: ConversationRole;
+
+    /**
+     * The content of the message, applicable for message-type items.
+     */
+    content?: ConversationContent[];
+  } & FunctionCallDetails;
+}
+
   
 
 /**
@@ -414,7 +463,8 @@ export type RealtimeEvent =
   | ConversationItemCreatedEvent
   | ResponseCreateEvent
   | ErrorEvent
-  | ConversationItemCreateEvent;
+  | ConversationItemCreateEvent
+  | ResponseOutputItemDoneEvent;
 
 
 /**
@@ -535,31 +585,7 @@ export enum Voice {
   /**
    * Definition of a tool (function) available to the model.
    */
-  export interface Tool {
-    /**
-     * Type of the tool. Always set to "function".
-     */
-    type: "function";
-  
-    /**
-     * Name of the tool, used to reference it during execution.
-     */
-    name: string;
-  
-    /**
-     * Description of the tool, including usage guidance.
-     */
-    description: string;
-  
-    /**
-     * Parameters for the tool in JSON Schema format.
-     */
-    parameters: {
-      type: "object";
-      properties: Record<string, unknown>;
-      required: string[];
-    };
-  }
+  export type Tool = OpenAIFunction;
   
   /**
    * Main interface for the session object configuration.
@@ -747,4 +773,79 @@ export enum Voice {
      */
     session: Partial<Omit<RealtimeSession, "id" | "object" | "clientSecret">>;
   }
+
+/**
+ * Type definition for an OpenAI function schema.
+ */
+export interface OpenAIFunction {
+  /**
+   * The type of tool. Always set to "function" for OpenAI function calls.
+   */
+  type: "function";
+
+    /**
+     * A unique name for the function.
+     */
+    name: string;
+
+    /**
+     * A short, human-readable description of what the function does.
+     */
+    description: string;
+
+    /**
+     * Parameters schema for the function, following JSON Schema standards.
+     */
+    parameters: {
+      /**
+       * The type of the schema. Always "object".
+       */
+      type: "object";
+
+      /**
+       * Properties (parameters) accepted by the function.
+       */
+      properties: {
+        [key: string]: {
+          /**
+           * The type of the property (e.g., string, number, object, etc.).
+           */
+          type: "string" | "number" | "boolean" | "object" | "array";
+
+          /**
+           * Optional description of the parameter.
+           */
+          description?: string;
+
+          /**
+           * Optional enumeration of allowed values (only for string, number, or array types).
+           */
+          enum?: string[] | number[];
+
+          /**
+           * Properties for nested objects (applicable if `type` is "object").
+           */
+          properties?: {
+            [key: string]: unknown;
+          };
+
+          /**
+           * Required parameters for nested objects (applicable if `type` is "object").
+           */
+          required?: string[];
+        };
+      };
+
+      /**
+       * List of required properties for the function.
+       */
+      required: string[];
+
+      /**
+       * Whether additional properties outside of those defined in `properties` are allowed.
+       */
+      additionalProperties: boolean;
+    };
+}
+
   

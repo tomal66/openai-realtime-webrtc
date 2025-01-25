@@ -17,6 +17,7 @@ import {
   ConversationItemCreateEvent,
   ConversationItemType,
   ContentType,
+  ResponseOutputItemDoneEvent,
 } from "../types"
 
 
@@ -44,7 +45,7 @@ interface OpenAIRealtimeWebRTCContextType {
    * @param realtimeSession - The session object containing configuration.
    * @returns A promise that resolves once the session is successfully started.
    */
-  startSession: (realtimeSession: RealtimeSession) => Promise<void>;
+  startSession: (realtimeSession: RealtimeSession, functionCallHandler?: (name: string, args: Record<string, unknown>) => void) => Promise<void>;
 
   /**
    * Ends an active WebRTC session and cleans up its resources.
@@ -90,7 +91,7 @@ interface OpenAIRealtimeWebRTCContextType {
    * @param sessionId - The unique identifier for the session to send the response to.
    * @param response - The response object to be sent.
    */
-  createResponse: (sessionId: string, response?: unknown) => void;
+  createResponse: (sessionId: string, response?: ResponseCreateBody) => void;
 
 }
 
@@ -114,7 +115,8 @@ export enum SessionActionType {
   REMOVE_SESSION = "REMOVE_SESSION",
   UPDATE_SESSION = "UPDATE_SESSION",
   ADD_TRANSCRIPT = "ADD_TRANSCRIPT",
-   ADD_ERROR = "ADD_ERROR",
+  ADD_ERROR = "ADD_ERROR",
+  SET_FUNCTION_CALL_HANDLER = "SET_FUNCTION_CALL_HANDLER",
 }
 
 // Action interfaces for type safety
@@ -143,8 +145,14 @@ interface AddErrorAction {
   payload: { sessionId: string; error: ErrorEvent };
 }
 
+interface SetFunctionCallHandlerAction {
+  type: SessionActionType.SET_FUNCTION_CALL_HANDLER;
+  payload: { sessionId: string; onFunctionCall: (name: string, args: Record<string, unknown>) => void };
+}
+
+
 // Union type for all actions
-type SessionAction = AddSessionAction | RemoveSessionAction | UpdateSessionAction | AddTranscriptAction | AddErrorAction;
+type SessionAction = AddSessionAction | RemoveSessionAction | UpdateSessionAction | AddTranscriptAction | AddErrorAction | SetFunctionCallHandlerAction;
 
 // Reducer state type
 type ChannelState = RealtimeSession[];
@@ -182,6 +190,12 @@ export const sessionReducer = (state: ChannelState, action: SessionAction): Chan
             }
           : session
       );
+    case SessionActionType.SET_FUNCTION_CALL_HANDLER:
+      return state.map((session) =>
+        session.id === action.payload.sessionId
+          ? { ...session, onFunctionCall: action.payload.onFunctionCall }
+          : session
+      );
 
     default:
       // Ensure exhaustive checks in TypeScript
@@ -200,6 +214,7 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
 
   const startSession = async (
     realtimeSession: RealtimeSession,
+    functionCallHandler?: (name: string, args: Record<string, unknown>) => void
   ): Promise<void> => {
     const sessionId = realtimeSession.id;
     // Create a new peer connection
@@ -255,7 +270,6 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
     });
   
     dc.addEventListener("message", (e: MessageEvent<string>) => {
-      console.log(`Message received on session '${sessionId}':`, e.data);
       const event: RealtimeEvent = JSON.parse(e.data) as unknown as RealtimeEvent;
       switch (event.type) {
         /**
@@ -309,6 +323,16 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
             },
           });
           break;
+        
+        
+      case RealtimeEventType.RESPONSE_OUTPUT_ITEM_DONE:
+        const responseEvent = event as ResponseOutputItemDoneEvent;
+        console.log(`Response received for session '${sessionId}':`, responseEvent);
+        // Check if it's a function call
+        if (responseEvent.item.type === ConversationItemType.FUNCTION_CALL) {
+          functionCallHandler?.(responseEvent.item.name as string, JSON.parse(responseEvent.item?.arguments || "{}"));
+        }
+        break;
     
         default:
           break;
@@ -485,7 +509,17 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
   sendClientEvent(sessionId, commitEvent);
   };
 
+  const setFunctionCallHandler = (
+    sessionId: string,
+    onFunctionCall: (name: string, args: Record<string, unknown>) => void
+  ): void => {
+    dispatch({
+      type: SessionActionType.SET_FUNCTION_CALL_HANDLER,
+      payload: { sessionId, onFunctionCall },
+    });
+  };
 
+  
   return (
     <OpenAIRealtimeWebRTCContext.Provider
       value={{ sessions, getSessionById, startSession, closeSession, sendTextMessage, sendClientEvent, sendAudioChunk, commitAudioBuffer, createResponse }}
