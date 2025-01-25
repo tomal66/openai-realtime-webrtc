@@ -8,7 +8,8 @@ const PushToTalk: React.FC<{ sessionId: string }> = ({ sessionId }) => {
   const audioContextRef = useRef<AudioContext | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
-  const { sendAudioChunk, commitAudioBuffer, createResponse } = useOpenAIRealtimeWebRTC();
+  const { sendAudioChunk, commitAudioBuffer, createResponse } =
+    useOpenAIRealtimeWebRTC();
 
   const handleStartRecording = async () => {
     setIsRecording(true);
@@ -80,27 +81,36 @@ const PushToTalk: React.FC<{ sessionId: string }> = ({ sessionId }) => {
   };
 
   return (
-    <div className="flex items-center justify-center space-y-2">
-      <button
-        onMouseDown={handleStartRecording}
-        onMouseUp={handleStopRecording}
-        onTouchStart={handleStartRecording}
-        onTouchEnd={handleStopRecording}
-        className={`w-16 h-16 flex items-center justify-center rounded-full border-4 transition-all duration-200 shadow-lg focus:outline-none focus:ring-4 ${
-          isRecording
-            ? "bg-red-500 border-red-700 shadow-red-500/50 focus:ring-red-300"
-            : "bg-gray-200 border-gray-400 shadow-gray-300/50 focus:ring-gray-300"
-        }`}
-      >
-        <span
-          className={`w-8 h-8 rounded-full ${
-            isRecording ? "bg-white" : "bg-red-500"
+    <div className="flex flex-col items-center space-y-4">
+      <div className="flex flex-col items-center space-y-2">
+        <button
+          onMouseDown={handleStartRecording}
+          onMouseUp={handleStopRecording}
+          onTouchStart={handleStartRecording}
+          onTouchEnd={handleStopRecording}
+          className={`w-20 h-20 flex items-center justify-center rounded-full border-4 transition-all duration-200 shadow-lg focus:outline-none focus:ring-4 ${
+            isRecording
+              ? "bg-red-500 border-red-700 shadow-red-500/50 focus:ring-red-300"
+              : "bg-gray-200 border-gray-400 shadow-gray-300/50 focus:ring-gray-300"
           }`}
-        ></span>
-      </button>
-      <p className="text-sm text-gray-600">
-        {isRecording ? "Recording..." : "Hold to Talk"}
-      </p>
+        >
+          <span
+            className={`w-10 h-10 rounded-full ${
+              isRecording ? "bg-white" : "bg-red-500"
+            }`}
+          ></span>
+        </button>
+        <p className="text-sm text-gray-600">
+          {isRecording ? "Recording..." : "Hold to Talk"}
+        </p>
+      </div>
+      <div className="text-center text-gray-500 text-sm">
+        <p>
+          <strong>Push to Talk:</strong> Adds audio streams to the conversation
+          context. Once you release the button, it commits the audio buffer and
+          explicitly requests the assistant to generate a response.
+        </p>
+      </div>
     </div>
   );
 };
