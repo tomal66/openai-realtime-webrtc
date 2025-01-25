@@ -54,6 +54,9 @@ export enum RealtimeEventType {
   INPUT_AUDIO_BUFFER_APPEND = "input_audio_buffer.append", // Appends audio data to the buffer
   INPUT_AUDIO_BUFFER_COMMIT = "input_audio_buffer.commit", // Commits the buffer for processing
   INPUT_AUDIO_BUFFER_CLEAR = "input_audio_buffer.clear", // Clears the audio buffer
+
+  // Error handling
+  ERROR = "error",
 }
 
 /**
@@ -153,6 +156,48 @@ export interface ConversationItemCreatedEvent extends BaseRealtimeEvent {
 }
 
 /**
+ * Error object to store details of session-level errors.
+ * Developers can use this for error tracking and handling.
+ */
+export interface SessionError {
+  /**
+   * Unique identifier for the error event.
+   */
+  event_id: string;
+
+  /**
+   * Type of the error (e.g., "invalid_request_error", "server_error").
+   */
+  type: string;
+
+  /**
+   * Error code, if available.
+   */
+  code: string | null;
+
+  /**
+   * Human-readable error message.
+   */
+  message: string;
+
+  /**
+   * Parameter related to the error, if any.
+   */
+  param: string | null;
+
+  /**
+   * The client event ID that caused the error, if applicable.
+   */
+  related_event_id: string | null;
+
+  /**
+   * Timestamp when the error occurred, in milliseconds since Unix epoch.
+   */
+  timestamp: number;
+}
+
+
+/**
  * Interface for creating a new response in the OpenAI Realtime API.
  */
 export interface ResponseCreateBody {
@@ -191,6 +236,20 @@ export interface ResponseCreateEvent extends BaseRealtimeEvent {
   type: RealtimeEventType.RESPONSE_CREATE;
   response: ResponseCreateBody | {};
 }
+
+/**
+ * Event for error handling.
+ */
+export interface ErrorEvent extends BaseRealtimeEvent {
+  type: RealtimeEventType.ERROR;
+  error: {
+    type: string; // Error type (e.g., "invalid_request_error", "server_error")
+    code: string | null; // Error code, if available
+    message: string; // Human-readable error message
+    param: string | null; // Parameter related to the error, if any
+    event_id: string | null; // The client event ID that caused the error, if applicable
+  };
+}
   
 
 /**
@@ -205,8 +264,8 @@ export type RealtimeEvent =
   | InputAudioBufferCommitEvent
   | InputAudioBufferClearEvent
   | ConversationItemCreatedEvent
-  | ResponseCreateEvent;
-  ;
+  | ResponseCreateEvent
+  | ErrorEvent;
 
 
 /**
@@ -479,6 +538,12 @@ export enum Voice {
      * Each transcript includes details such as content, timestamp, type, and role.
     */
     transcripts: Transcript[];
+
+    /**
+     * List of errors that have occurred during this session.
+     * This array is updated whenever an error event is received.
+    */
+    errors?: SessionError[];
   }
   
   /**

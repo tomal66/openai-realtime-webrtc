@@ -13,7 +13,8 @@ import {
   InputAudioBufferCommitEvent,
   ConversationItemCreatedEvent,
   ResponseCreateEvent,
-  ResponseCreateBody
+  ResponseCreateBody,
+  ErrorEvent,
 } from "../types"
 
 
@@ -111,6 +112,7 @@ export enum SessionActionType {
   REMOVE_SESSION = "REMOVE_SESSION",
   UPDATE_SESSION = "UPDATE_SESSION",
   ADD_TRANSCRIPT = "ADD_TRANSCRIPT",
+   ADD_ERROR = "ADD_ERROR",
 }
 
 // Action interfaces for type safety
@@ -134,8 +136,13 @@ interface AddTranscriptAction {
   payload: { sessionId: string; transcript: Transcript };
 }
 
+interface AddErrorAction {
+  type: SessionActionType.ADD_ERROR;
+  payload: { sessionId: string; error: ErrorEvent };
+}
+
 // Union type for all actions
-type SessionAction = AddSessionAction | RemoveSessionAction | UpdateSessionAction | AddTranscriptAction;
+type SessionAction = AddSessionAction | RemoveSessionAction | UpdateSessionAction | AddTranscriptAction | AddErrorAction;
 
 // Reducer state type
 type ChannelState = RealtimeSession[];
@@ -161,6 +168,15 @@ export const sessionReducer = (state: ChannelState, action: SessionAction): Chan
           ? {
               ...session,
               transcripts: [...(session.transcripts || []), action.payload.transcript],
+            }
+          : session
+      );
+    case SessionActionType.ADD_ERROR:
+      return state.map((session) =>
+        session.id === action.payload.sessionId
+          ? {
+              ...session,
+              errors: [...(session.errors || []), action.payload.error],
             }
           : session
       );
@@ -275,6 +291,19 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
                   type: TranscriptType.OUTPUT,
                   role: TranscriptRole.MODEL,
                 },
+            },
+          });
+          break;
+        /**
+         * Trigger when an error occurs during processing.
+         * This event provides information about the error that occurred.
+         */
+        case RealtimeEventType.ERROR:
+          dispatch({
+            type: SessionActionType.ADD_ERROR,
+            payload: {
+              sessionId,
+              error: event as ErrorEvent,
             },
           });
           break;
