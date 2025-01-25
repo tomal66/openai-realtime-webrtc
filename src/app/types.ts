@@ -349,7 +349,7 @@ export interface ResponseCreateBody {
   */
 export interface ResponseCreateEvent extends BaseRealtimeEvent {
   type: RealtimeEventType.RESPONSE_CREATE;
-  response: ResponseCreateBody | {};
+  response: ResponseCreateBody | object;
 }
 
 /**

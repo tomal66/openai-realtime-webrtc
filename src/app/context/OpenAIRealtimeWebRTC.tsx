@@ -509,16 +509,6 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
   sendClientEvent(sessionId, commitEvent);
   };
 
-  const setFunctionCallHandler = (
-    sessionId: string,
-    onFunctionCall: (name: string, args: Record<string, unknown>) => void
-  ): void => {
-    dispatch({
-      type: SessionActionType.SET_FUNCTION_CALL_HANDLER,
-      payload: { sessionId, onFunctionCall },
-    });
-  };
-
   
   return (
     <OpenAIRealtimeWebRTCContext.Provider
