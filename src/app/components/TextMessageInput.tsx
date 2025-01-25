@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import { useOpenAIRealtimeWebRTC } from "../context/OpenAIRealtimeWebRTC";
+import React, { useState } from 'react';
+import { useOpenAIRealtimeWebRTC } from '../context/OpenAIRealtimeWebRTC';
 
 const TextMessageInput: React.FC<{ sessionId: string }> = ({ sessionId }) => {
   const { sendTextMessage, createResponse } = useOpenAIRealtimeWebRTC();
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState('');
 
   /**
    * Handle sending the message from the user.
@@ -13,7 +13,7 @@ const TextMessageInput: React.FC<{ sessionId: string }> = ({ sessionId }) => {
   const handleSendMessage = () => {
     if (message.trim()) {
       sendTextMessage(sessionId, message); // Send the message using the context function
-      setMessage(""); // Clear the input field
+      setMessage(''); // Clear the input field
     }
   };
 
@@ -28,7 +28,7 @@ const TextMessageInput: React.FC<{ sessionId: string }> = ({ sessionId }) => {
    * Handle keypress events for the input field.
    */
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key === "Enter" && !event.shiftKey) {
+    if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       handleSendMessage(); // Trigger send on Enter key press
     }
@@ -64,8 +64,8 @@ const TextMessageInput: React.FC<{ sessionId: string }> = ({ sessionId }) => {
 
       <p className="text-sm text-gray-600 italic">
         <strong>Send:</strong> Sends your message to the assistant. <br />
-        <strong>Generate Response:</strong> Explicitly triggers the assistant
-        to generate a response in non-VAD mode.
+        <strong>Generate Response:</strong> Explicitly triggers the assistant to
+        generate a response in non-VAD mode.
       </p>
     </div>
   );

@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from 'react';
 
 interface WebRTCPlayerProps {
   remoteStream: MediaStream | null;
@@ -28,7 +28,7 @@ const WebRTCPlayer: React.FC<WebRTCPlayerProps> = ({ remoteStream }) => {
 
       // Get canvas context for drawing
       const canvas = canvasRef.current;
-      const canvasContext = canvas?.getContext("2d");
+      const canvasContext = canvas?.getContext('2d');
       if (!canvas || !canvasContext) return;
 
       // Set canvas size

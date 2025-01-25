@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import React, { useState, useRef } from "react";
-import { useOpenAIRealtimeWebRTC } from "../context/OpenAIRealtimeWebRTC";
+import React, { useState, useRef } from 'react';
+import { useOpenAIRealtimeWebRTC } from '../context/OpenAIRealtimeWebRTC';
 
 const PushToTalk: React.FC<{ sessionId: string }> = ({ sessionId }) => {
   const [isRecording, setIsRecording] = useState(false);
@@ -90,18 +90,18 @@ const PushToTalk: React.FC<{ sessionId: string }> = ({ sessionId }) => {
           onTouchEnd={handleStopRecording}
           className={`w-20 h-20 flex items-center justify-center rounded-full border-4 transition-all duration-200 shadow-lg focus:outline-none focus:ring-4 ${
             isRecording
-              ? "bg-red-500 border-red-700 shadow-red-500/50 focus:ring-red-300"
-              : "bg-gray-200 border-gray-400 shadow-gray-300/50 focus:ring-gray-300"
+              ? 'bg-red-500 border-red-700 shadow-red-500/50 focus:ring-red-300'
+              : 'bg-gray-200 border-gray-400 shadow-gray-300/50 focus:ring-gray-300'
           }`}
         >
           <span
             className={`w-10 h-10 rounded-full ${
-              isRecording ? "bg-white" : "bg-red-500"
+              isRecording ? 'bg-white' : 'bg-red-500'
             }`}
           ></span>
         </button>
         <p className="text-sm text-gray-600">
-          {isRecording ? "Recording..." : "Hold to Talk"}
+          {isRecording ? 'Recording...' : 'Hold to Talk'}
         </p>
       </div>
       <div className="text-center text-gray-500 text-sm">

@@ -1,46 +1,45 @@
-
 /**
  * Enum representing the type of a conversation item.
  */
 export enum ConversationItemType {
-  MESSAGE = "message",
-  FUNCTION_CALL = "function_call",
-  FUNCTION_CALL_OUTPUT = "function_call_output",
+  MESSAGE = 'message',
+  FUNCTION_CALL = 'function_call',
+  FUNCTION_CALL_OUTPUT = 'function_call_output',
 }
 
 /**
  * Types of content in a message
  */
 export enum ContentType {
-  INPUT_TEXT = "input_text",
-  INPUT_AUDIO = "input_audio",
-  ITEM_REFERENCE = "item_reference",
-  TEXT = "text",
+  INPUT_TEXT = 'input_text',
+  INPUT_AUDIO = 'input_audio',
+  ITEM_REFERENCE = 'item_reference',
+  TEXT = 'text',
 }
 
 /**
  * Enum representing the type of transcript.
  */
 export enum TranscriptType {
-  INPUT = "input",
-  OUTPUT = "output",
+  INPUT = 'input',
+  OUTPUT = 'output',
 }
 
 /**
  * Enum representing the role of a transcript.
  */
 export enum ConversationRole {
-  USER = "user",
-  ASSISTANT = "assistant",
-  SYSTEM = "system",
+  USER = 'user',
+  ASSISTANT = 'assistant',
+  SYSTEM = 'system',
 }
 
-  /**
-  * Status of a conversation item
-  */
+/**
+ * Status of a conversation item
+ */
 export enum ConversationItemStatus {
-  COMPLETED = "completed",
-  INCOMPLETE = "incomplete",
+  COMPLETED = 'completed',
+  INCOMPLETE = 'incomplete',
 }
 
 // Individual content item
@@ -109,7 +108,7 @@ export interface ConversationItem extends FunctionCallDetails {
   /**
    * Identifier for the API object being returned, always "realtime.item".
    */
-  object: "realtime.item";
+  object: 'realtime.item';
 
   /**
    * Status of the item (completed, incomplete).
@@ -132,46 +131,46 @@ export interface ConversationItem extends FunctionCallDetails {
  */
 export enum RealtimeEventType {
   // Session events
-  SESSION_CREATED = "session.created",
-  SESSION_UPDATED = "session.updated",
+  SESSION_CREATED = 'session.created',
+  SESSION_UPDATED = 'session.updated',
 
   // Input audio buffer events
-  INPUT_AUDIO_SPEECH_STARTED = "input_audio_buffer.speech_started",
-  INPUT_AUDIO_SPEECH_STOPPED = "input_audio_buffer.speech_stopped",
-  INPUT_AUDIO_COMMITTED = "input_audio_buffer.committed",
-  INPUT_AUDIO_CLEARED = "input_audio_buffer.cleared",
+  INPUT_AUDIO_SPEECH_STARTED = 'input_audio_buffer.speech_started',
+  INPUT_AUDIO_SPEECH_STOPPED = 'input_audio_buffer.speech_stopped',
+  INPUT_AUDIO_COMMITTED = 'input_audio_buffer.committed',
+  INPUT_AUDIO_CLEARED = 'input_audio_buffer.cleared',
 
   // Conversation events
-  CONVERSATION_ITEM_CREATED = "conversation.item.created",
-  CONVERSATION_ITEM_INPUT_AUDIO_TRANSCRIPTION_COMPLETED = "conversation.item.input_audio_transcription.completed",
-  CONVERSATION_ITEM_DELETED = "conversation.item.deleted",
-  CONVERSATION_ITEM_CREATE= "conversation.item.create",
+  CONVERSATION_ITEM_CREATED = 'conversation.item.created',
+  CONVERSATION_ITEM_INPUT_AUDIO_TRANSCRIPTION_COMPLETED = 'conversation.item.input_audio_transcription.completed',
+  CONVERSATION_ITEM_DELETED = 'conversation.item.deleted',
+  CONVERSATION_ITEM_CREATE = 'conversation.item.create',
 
   // Response events
-  RESPONSE_CREATED = "response.created",
-  RESPONSE_CREATE= "response.create",
-  RESPONSE_OUTPUT_ITEM_ADDED = "response.output_item.added",
-  RESPONSE_AUDIO_TRANSCRIPT_DELTA = "response.audio_transcript.delta",
-  RESPONSE_AUDIO_TRANSCRIPT_DONE = "response.audio_transcript.done",
-  RESPONSE_CONTENT_PART_DONE = "response.content_part.done",
-  RESPONSE_DONE = "response.done",
-  RESPONSE_CANCELLED = "response.cancelled",
-  RESPONSE_OUTPUT_ITEM_DONE= "response.output_item.done",
+  RESPONSE_CREATED = 'response.created',
+  RESPONSE_CREATE = 'response.create',
+  RESPONSE_OUTPUT_ITEM_ADDED = 'response.output_item.added',
+  RESPONSE_AUDIO_TRANSCRIPT_DELTA = 'response.audio_transcript.delta',
+  RESPONSE_AUDIO_TRANSCRIPT_DONE = 'response.audio_transcript.done',
+  RESPONSE_CONTENT_PART_DONE = 'response.content_part.done',
+  RESPONSE_DONE = 'response.done',
+  RESPONSE_CANCELLED = 'response.cancelled',
+  RESPONSE_OUTPUT_ITEM_DONE = 'response.output_item.done',
 
   // Output audio buffer events
-  OUTPUT_AUDIO_STARTED = "output_audio_buffer.audio_started",
-  OUTPUT_AUDIO_STOPPED = "output_audio_buffer.audio_stopped",
+  OUTPUT_AUDIO_STARTED = 'output_audio_buffer.audio_started',
+  OUTPUT_AUDIO_STOPPED = 'output_audio_buffer.audio_stopped',
 
   // Rate limit updates
-  RATE_LIMITS_UPDATED = "rate_limits.updated",
+  RATE_LIMITS_UPDATED = 'rate_limits.updated',
 
   // Input audio buffer events
-  INPUT_AUDIO_BUFFER_APPEND = "input_audio_buffer.append", // Appends audio data to the buffer
-  INPUT_AUDIO_BUFFER_COMMIT = "input_audio_buffer.commit", // Commits the buffer for processing
-  INPUT_AUDIO_BUFFER_CLEAR = "input_audio_buffer.clear", // Clears the audio buffer
+  INPUT_AUDIO_BUFFER_APPEND = 'input_audio_buffer.append', // Appends audio data to the buffer
+  INPUT_AUDIO_BUFFER_COMMIT = 'input_audio_buffer.commit', // Commits the buffer for processing
+  INPUT_AUDIO_BUFFER_CLEAR = 'input_audio_buffer.clear', // Clears the audio buffer
 
   // Error handling
-  ERROR = "error",
+  ERROR = 'error',
 }
 
 /**
@@ -193,7 +192,6 @@ interface BaseRealtimeEvent {
    */
   timestamp?: number;
 }
-
 
 /**
  * Event for input transcription completed.
@@ -261,10 +259,10 @@ export interface InputAudioBufferClearEvent extends BaseRealtimeEvent {
 export interface ConversationItemCreatedEvent extends BaseRealtimeEvent {
   type: RealtimeEventType.CONVERSATION_ITEM_CREATED;
   item: {
-    type: "message"; // Represents the type of conversation item
+    type: 'message'; // Represents the type of conversation item
     role: ConversationRole.USER; // The role of the transcript, always USER for this event
     content: Array<{
-      type: "input_text"; // Specifies the type of input
+      type: 'input_text'; // Specifies the type of input
       text: string; // The text content of the input message
     }>;
   };
@@ -311,7 +309,6 @@ export interface SessionError {
   timestamp: number;
 }
 
-
 /**
  * Interface for creating a new response in the OpenAI Realtime API.
  */
@@ -323,17 +320,17 @@ export interface ResponseCreateBody {
   tools?: Tool[];
   tool_choice?: ToolChoice;
   temperature?: number;
-  max_response_output_tokens?: number | "inf";
-  conversation?: "auto" | "none";
+  max_response_output_tokens?: number | 'inf';
+  conversation?: 'auto' | 'none';
   metadata?: Record<string, string>;
   input?: Array<{
     id?: string;
-    type: "message" | "function_call" | "function_call_output";
-    object: "realtime.item";
-    status?: "completed" | "incomplete";
-    role?: "user" | "assistant" | "system";
+    type: 'message' | 'function_call' | 'function_call_output';
+    object: 'realtime.item';
+    status?: 'completed' | 'incomplete';
+    role?: 'user' | 'assistant' | 'system';
     content?: Array<{
-      type: "input_text" | "input_audio" | "text";
+      type: 'input_text' | 'input_audio' | 'text';
       text?: string;
       audio?: string;
     }>;
@@ -346,7 +343,7 @@ export interface ResponseCreateBody {
 
 /**
  * Event for creating a response manually.
-  */
+ */
 export interface ResponseCreateEvent extends BaseRealtimeEvent {
   type: RealtimeEventType.RESPONSE_CREATE;
   response: ResponseCreateBody | object;
@@ -423,7 +420,7 @@ export interface ResponseOutputItemDoneEvent extends BaseRealtimeEvent {
     /**
      * Object type, always "realtime.item".
      */
-    object: "realtime.item";
+    object: 'realtime.item';
 
     /**
      * The type of the item, such as "function_call", "message", etc.
@@ -447,8 +444,6 @@ export interface ResponseOutputItemDoneEvent extends BaseRealtimeEvent {
   } & FunctionCallDetails;
 }
 
-  
-
 /**
  * Union type for all OpenAI WebRTC events.
  */
@@ -465,7 +460,6 @@ export type RealtimeEvent =
   | ErrorEvent
   | ConversationItemCreateEvent
   | ResponseOutputItemDoneEvent;
-
 
 /**
  * Interface representing a transcript in a session.
@@ -492,287 +486,286 @@ export interface Transcript {
   role: ConversationRole;
 }
 
-
 /**
  * Enums for fixed string values used in the session configuration.
  */
 
 // Supported AI voice options.
 export enum Voice {
-    ALLOY = "alloy",
-    ASH = "ash",
-    BALLAD = "ballad",
-    CORAL = "coral",
-    ECHO = "echo",
-    SAGE = "sage",
-    SHIMMER = "shimmer",
-    VERSE = "verse",
-  }
-  
+  ALLOY = 'alloy',
+  ASH = 'ash',
+  BALLAD = 'ballad',
+  CORAL = 'coral',
+  ECHO = 'echo',
+  SAGE = 'sage',
+  SHIMMER = 'shimmer',
+  VERSE = 'verse',
+}
+
+/**
+ * Supported input/output audio formats.
+ */
+export enum AudioFormat {
+  PCM16 = 'pcm16',
+  G711_ULAW = 'g711_ulaw',
+  G711_ALAW = 'g711_alaw',
+}
+
+/**
+ * Supported turn detection types.
+ */
+export enum TurnDetectionType {
+  SERVER_VAD = 'server_vad',
+}
+
+/**
+ * Supported tool choice options for the model.
+ */
+export enum ToolChoice {
+  AUTO = 'auto',
+  NONE = 'none',
+  REQUIRED = 'required',
+}
+
+/**
+ * Enum for modalities the model supports.
+ */
+export enum Modality {
+  AUDIO = 'audio',
+  TEXT = 'text',
+}
+
+/**
+ * Configuration for input audio transcription.
+ */
+export interface AudioTranscriptionConfig {
   /**
-   * Supported input/output audio formats.
+   * The transcription model to use.
+   * Currently, only `whisper-1` is supported.
    */
-  export enum AudioFormat {
-    PCM16 = "pcm16",
-    G711_ULAW = "g711_ulaw",
-    G711_ALAW = "g711_alaw",
-  }
-  
+  model: 'whisper-1';
+}
+
+/**
+ * Configuration for turn detection.
+ */
+export interface TurnDetectionConfig {
   /**
-   * Supported turn detection types.
+   * Type of turn detection (e.g., server VAD).
    */
-  export enum TurnDetectionType {
-    SERVER_VAD = "server_vad",
-  }
-  
+  type: TurnDetectionType;
+
   /**
-   * Supported tool choice options for the model.
+   * Activation threshold for VAD (0.0 to 1.0).
+   * A higher value requires louder audio to activate the model.
+   * Defaults to 0.5.
    */
-  export enum ToolChoice {
-    AUTO = "auto",
-    NONE = "none",
-    REQUIRED = "required",
-  }
-  
+  threshold?: number;
+
   /**
-   * Enum for modalities the model supports.
+   * Amount of audio (in milliseconds) to include before the VAD detected speech.
+   * Defaults to 300ms.
    */
-  export enum Modality {
-    AUDIO = "audio",
-    TEXT = "text",
-  }
-  
+  prefix_padding_ms?: number;
+
+  /**
+   * Duration of silence (in milliseconds) to detect speech stop.
+   * Defaults to 500ms.
+   */
+  silence_duration_ms?: number;
+}
+
+/**
+ * Definition of a tool (function) available to the model.
+ */
+export type Tool = OpenAIFunction;
+
+/**
+ * Main interface for the session object configuration.
+ */
+export interface RealtimeSession {
+  /**
+   * Unique identifier for the session.
+   */
+  id: string;
+
+  /**
+   * Object type identifier, always set to "realtime.session".
+   */
+  object: 'realtime.session';
+
+  /**
+   * Model to use for the session (e.g., GPT-4 Realtime Preview).
+   */
+  model: string;
+
+  /**
+   * Supported modalities for the session (e.g., audio, text).
+   */
+  modalities: Modality[];
+
+  /**
+   * Default system instructions for the model.
+   * Used to guide response content and behavior.
+   */
+  instructions?: string;
+
+  /**
+   * AI voice used for audio responses.
+   * Can only be set before the first audio response.
+   */
+  voice?: Voice;
+
+  /**
+   * Format of the input audio (e.g., PCM16, G711_ULAW).
+   */
+  input_audio_format?: AudioFormat;
+
+  /**
+   * Format of the output audio (e.g., PCM16, G711_ALAW).
+   */
+  output_audio_format?: AudioFormat;
+
   /**
    * Configuration for input audio transcription.
+   * Defaults to off and can be set to null to turn off.
    */
-  export interface AudioTranscriptionConfig {
-    /**
-     * The transcription model to use.
-     * Currently, only `whisper-1` is supported.
-     */
-    model: "whisper-1";
-  }
-  
+  input_audio_transcription?: AudioTranscriptionConfig | null;
+
   /**
    * Configuration for turn detection.
+   * Can be set to null to disable turn detection.
    */
-  export interface TurnDetectionConfig {
-    /**
-     * Type of turn detection (e.g., server VAD).
-     */
-    type: TurnDetectionType;
-  
-    /**
-     * Activation threshold for VAD (0.0 to 1.0).
-     * A higher value requires louder audio to activate the model.
-     * Defaults to 0.5.
-     */
-    threshold?: number;
-  
-    /**
-     * Amount of audio (in milliseconds) to include before the VAD detected speech.
-     * Defaults to 300ms.
-     */
-    prefix_padding_ms?: number;
-  
-    /**
-     * Duration of silence (in milliseconds) to detect speech stop.
-     * Defaults to 500ms.
-     */
-    silence_duration_ms?: number;
-  }
-  
+  turn_detection?: TurnDetectionConfig | null;
+
   /**
-   * Definition of a tool (function) available to the model.
+   * List of tools (functions) available to the model.
    */
-  export type Tool = OpenAIFunction;
-  
+  tools?: Tool[];
+
   /**
-   * Main interface for the session object configuration.
+   * How the model selects tools (e.g., auto, none, required).
    */
-  export interface RealtimeSession {
+  tool_choice?: ToolChoice;
+
+  /**
+   * Sampling temperature for response generation.
+   * Controls the randomness of the output (0.6 to 1.2). Defaults to 0.8.
+   */
+  temperature?: number;
+
+  /**
+   * Maximum number of output tokens for a single assistant response.
+   * Can be a number (1 to 4096) or "inf" for the maximum.
+   */
+  max_response_output_tokens?: number | 'inf';
+
+  /**
+   * Ephemeral client secret for authenticating connections.
+   */
+  client_secret?: {
     /**
-     * Unique identifier for the session.
+     * The actual ephemeral key value.
      */
-    id: string;
-  
+    value: string;
+
     /**
-     * Object type identifier, always set to "realtime.session".
+     * Expiration timestamp for the ephemeral key.
      */
-    object: "realtime.session";
-  
-    /**
-     * Model to use for the session (e.g., GPT-4 Realtime Preview).
-     */
-    model: string;
-  
-    /**
-     * Supported modalities for the session (e.g., audio, text).
-     */
-    modalities: Modality[];
-  
-    /**
-     * Default system instructions for the model.
-     * Used to guide response content and behavior.
-     */
-    instructions?: string;
-  
-    /**
-     * AI voice used for audio responses.
-     * Can only be set before the first audio response.
-     */
-    voice?: Voice;
-  
-    /**
-     * Format of the input audio (e.g., PCM16, G711_ULAW).
-     */
-    input_audio_format?: AudioFormat;
-  
-    /**
-     * Format of the output audio (e.g., PCM16, G711_ALAW).
-     */
-    output_audio_format?: AudioFormat;
-  
-    /**
-     * Configuration for input audio transcription.
-     * Defaults to off and can be set to null to turn off.
-     */
-    input_audio_transcription?: AudioTranscriptionConfig | null;
-  
-    /**
-     * Configuration for turn detection.
-     * Can be set to null to disable turn detection.
-     */
-    turn_detection?: TurnDetectionConfig | null;
-  
-    /**
-     * List of tools (functions) available to the model.
-     */
-    tools?: Tool[];
-  
-    /**
-     * How the model selects tools (e.g., auto, none, required).
-     */
-    tool_choice?: ToolChoice;
-  
-    /**
-     * Sampling temperature for response generation.
-     * Controls the randomness of the output (0.6 to 1.2). Defaults to 0.8.
-     */
-    temperature?: number;
-  
-    /**
-     * Maximum number of output tokens for a single assistant response.
-     * Can be a number (1 to 4096) or "inf" for the maximum.
-     */
-    max_response_output_tokens?: number | "inf";
-  
-    /**
-     * Ephemeral client secret for authenticating connections.
-     */
-    client_secret?: {
-      /**
-       * The actual ephemeral key value.
-       */
-      value: string;
-    
-      /**
-       * Expiration timestamp for the ephemeral key.
-       */
-      expires_at: number;
-    };
-    /**
+    expires_at: number;
+  };
+  /**
    * The WebRTC peer connection associated with this session.
    * Used for managing the connection lifecycle.
    */
-    peer_connection?: RTCPeerConnection | null;
+  peer_connection?: RTCPeerConnection | null;
 
-    /**
-     * The WebRTC data channel associated with this session.
-     * Used for sending and receiving data.
-     */
-    dataChannel?: RTCDataChannel | null;
-
-    /**
-     * Indicates whether the session is in the process of being established.
-     */
-    isConnecting?: boolean;
-
-    /**
-     * Indicates whether the session is successfully connected and ready for use.
-     */
-    isConnected?: boolean;
-
-    /**
-     * The local media stream used for audio output.
-     */
-    mediaStream?: MediaStream | null;
-
-    /**
-     * List of all transcripts associated with this session.
-     * Each transcript includes details such as content, timestamp, type, and role.
-    */
-    transcripts: Transcript[];
-
-    /**
-     * List of errors that have occurred during this session.
-     * This array is updated whenever an error event is received.
-    */
-    errors?: SessionError[];
-  }
-  
   /**
-   * Type definition for the request body to create a new session in the OpenAI Realtime API.
+   * The WebRTC data channel associated with this session.
+   * Used for sending and receiving data.
    */
-  export interface SessionConfig
-    extends Partial<Omit<RealtimeSession, "id" | "object" | "clientSecret">> {
-    /**
-     * The Realtime model to use for this session (e.g., GPT-4 Realtime Preview).
-     * This is optional during session creation.
-     */
-    model?: string;
-  
-    /**
-     * The modalities the model should respond with (e.g., `["text", "audio"]`).
-     */
-    modalities?: Modality[];
-  
-    /**
-     * Default system instructions (system message) to guide model behavior.
-     */
-    instructions?: string;
-  
-    /**
-     * Optional list of tools (functions) available to the model.
-     */
-    tools?: Tool[];
-  
-    /**
-     * Optional turn detection configuration for managing user interaction.
-     */
-    turn_detection?: TurnDetectionConfig | null;
-  }
-  
+  dataChannel?: RTCDataChannel | null;
+
   /**
-   * Type definition for the request body of a session update event in the OpenAI Realtime API.
+   * Indicates whether the session is in the process of being established.
    */
-  export interface UpdateSessionRequest {
-    /**
-     * Optional client-generated ID to identify this event.
-     */
-    event_id?: string;
-  
-    /**
-     * The type of the event, always set to "session.update".
-     */
-    type: "session.update";
-  
-    /**
-     * The updated session configuration object.
-     * Only provided fields will be updated. To clear fields like `instructions`, pass an empty string.
-     */
-    session: Partial<Omit<RealtimeSession, "id" | "object" | "clientSecret">>;
-  }
+  isConnecting?: boolean;
+
+  /**
+   * Indicates whether the session is successfully connected and ready for use.
+   */
+  isConnected?: boolean;
+
+  /**
+   * The local media stream used for audio output.
+   */
+  mediaStream?: MediaStream | null;
+
+  /**
+   * List of all transcripts associated with this session.
+   * Each transcript includes details such as content, timestamp, type, and role.
+   */
+  transcripts: Transcript[];
+
+  /**
+   * List of errors that have occurred during this session.
+   * This array is updated whenever an error event is received.
+   */
+  errors?: SessionError[];
+}
+
+/**
+ * Type definition for the request body to create a new session in the OpenAI Realtime API.
+ */
+export interface SessionConfig
+  extends Partial<Omit<RealtimeSession, 'id' | 'object' | 'clientSecret'>> {
+  /**
+   * The Realtime model to use for this session (e.g., GPT-4 Realtime Preview).
+   * This is optional during session creation.
+   */
+  model?: string;
+
+  /**
+   * The modalities the model should respond with (e.g., `["text", "audio"]`).
+   */
+  modalities?: Modality[];
+
+  /**
+   * Default system instructions (system message) to guide model behavior.
+   */
+  instructions?: string;
+
+  /**
+   * Optional list of tools (functions) available to the model.
+   */
+  tools?: Tool[];
+
+  /**
+   * Optional turn detection configuration for managing user interaction.
+   */
+  turn_detection?: TurnDetectionConfig | null;
+}
+
+/**
+ * Type definition for the request body of a session update event in the OpenAI Realtime API.
+ */
+export interface UpdateSessionRequest {
+  /**
+   * Optional client-generated ID to identify this event.
+   */
+  event_id?: string;
+
+  /**
+   * The type of the event, always set to "session.update".
+   */
+  type: 'session.update';
+
+  /**
+   * The updated session configuration object.
+   * Only provided fields will be updated. To clear fields like `instructions`, pass an empty string.
+   */
+  session: Partial<Omit<RealtimeSession, 'id' | 'object' | 'clientSecret'>>;
+}
 
 /**
  * Type definition for an OpenAI function schema.
@@ -781,71 +774,69 @@ export interface OpenAIFunction {
   /**
    * The type of tool. Always set to "function" for OpenAI function calls.
    */
-  type: "function";
+  type: 'function';
+
+  /**
+   * A unique name for the function.
+   */
+  name: string;
+
+  /**
+   * A short, human-readable description of what the function does.
+   */
+  description: string;
+
+  /**
+   * Parameters schema for the function, following JSON Schema standards.
+   */
+  parameters: {
+    /**
+     * The type of the schema. Always "object".
+     */
+    type: 'object';
 
     /**
-     * A unique name for the function.
+     * Properties (parameters) accepted by the function.
      */
-    name: string;
+    properties: {
+      [key: string]: {
+        /**
+         * The type of the property (e.g., string, number, object, etc.).
+         */
+        type: 'string' | 'number' | 'boolean' | 'object' | 'array';
 
-    /**
-     * A short, human-readable description of what the function does.
-     */
-    description: string;
+        /**
+         * Optional description of the parameter.
+         */
+        description?: string;
 
-    /**
-     * Parameters schema for the function, following JSON Schema standards.
-     */
-    parameters: {
-      /**
-       * The type of the schema. Always "object".
-       */
-      type: "object";
+        /**
+         * Optional enumeration of allowed values (only for string, number, or array types).
+         */
+        enum?: string[] | number[];
 
-      /**
-       * Properties (parameters) accepted by the function.
-       */
-      properties: {
-        [key: string]: {
-          /**
-           * The type of the property (e.g., string, number, object, etc.).
-           */
-          type: "string" | "number" | "boolean" | "object" | "array";
-
-          /**
-           * Optional description of the parameter.
-           */
-          description?: string;
-
-          /**
-           * Optional enumeration of allowed values (only for string, number, or array types).
-           */
-          enum?: string[] | number[];
-
-          /**
-           * Properties for nested objects (applicable if `type` is "object").
-           */
-          properties?: {
-            [key: string]: unknown;
-          };
-
-          /**
-           * Required parameters for nested objects (applicable if `type` is "object").
-           */
-          required?: string[];
+        /**
+         * Properties for nested objects (applicable if `type` is "object").
+         */
+        properties?: {
+          [key: string]: unknown;
         };
+
+        /**
+         * Required parameters for nested objects (applicable if `type` is "object").
+         */
+        required?: string[];
       };
-
-      /**
-       * List of required properties for the function.
-       */
-      required: string[];
-
-      /**
-       * Whether additional properties outside of those defined in `properties` are allowed.
-       */
-      additionalProperties: boolean;
     };
-}
 
-  
+    /**
+     * List of required properties for the function.
+     */
+    required: string[];
+
+    /**
+     * Whether additional properties outside of those defined in `properties` are allowed.
+     */
+    additionalProperties: boolean;
+  };
+}

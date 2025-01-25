@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import React, { createContext, useContext, useReducer } from "react";
-import { 
+import React, { createContext, useContext, useReducer } from 'react';
+import {
   Transcript,
-  Modality, 
+  Modality,
   RealtimeSession,
   RealtimeEventType,
   TranscriptType,
@@ -18,8 +18,7 @@ import {
   ConversationItemType,
   ContentType,
   ResponseOutputItemDoneEvent,
-} from "../types"
-
+} from '../types';
 
 /**
  * Context type definition for managing OpenAI Realtime WebRTC sessions.
@@ -45,7 +44,10 @@ interface OpenAIRealtimeWebRTCContextType {
    * @param realtimeSession - The session object containing configuration.
    * @returns A promise that resolves once the session is successfully started.
    */
-  startSession: (realtimeSession: RealtimeSession, functionCallHandler?: (name: string, args: Record<string, unknown>) => void) => Promise<void>;
+  startSession: (
+    realtimeSession: RealtimeSession,
+    functionCallHandler?: (name: string, args: Record<string, unknown>) => void
+  ) => Promise<void>;
 
   /**
    * Ends an active WebRTC session and cleans up its resources.
@@ -92,31 +94,32 @@ interface OpenAIRealtimeWebRTCContextType {
    * @param response - The response object to be sent.
    */
   createResponse: (sessionId: string, response?: ResponseCreateBody) => void;
-
 }
 
-
 // Create the OpenAI Realtime WebRTC context
-const OpenAIRealtimeWebRTCContext = createContext<OpenAIRealtimeWebRTCContextType | undefined>(undefined);
-
+const OpenAIRealtimeWebRTCContext = createContext<
+  OpenAIRealtimeWebRTCContextType | undefined
+>(undefined);
 
 // Export the context for use in other components
 export const useOpenAIRealtimeWebRTC = (): OpenAIRealtimeWebRTCContextType => {
   const context = useContext(OpenAIRealtimeWebRTCContext);
   if (!context) {
-    throw new Error("useOpenAIRealtimeWebRTC must be used within an OpenAIRealtimeWebRTCProvider");
+    throw new Error(
+      'useOpenAIRealtimeWebRTC must be used within an OpenAIRealtimeWebRTCProvider'
+    );
   }
   return context;
 };
 
 // Enum for action types to avoid hardcoding strings
 export enum SessionActionType {
-  ADD_SESSION = "ADD_SESSION",
-  REMOVE_SESSION = "REMOVE_SESSION",
-  UPDATE_SESSION = "UPDATE_SESSION",
-  ADD_TRANSCRIPT = "ADD_TRANSCRIPT",
-  ADD_ERROR = "ADD_ERROR",
-  SET_FUNCTION_CALL_HANDLER = "SET_FUNCTION_CALL_HANDLER",
+  ADD_SESSION = 'ADD_SESSION',
+  REMOVE_SESSION = 'REMOVE_SESSION',
+  UPDATE_SESSION = 'UPDATE_SESSION',
+  ADD_TRANSCRIPT = 'ADD_TRANSCRIPT',
+  ADD_ERROR = 'ADD_ERROR',
+  SET_FUNCTION_CALL_HANDLER = 'SET_FUNCTION_CALL_HANDLER',
 }
 
 // Action interfaces for type safety
@@ -147,22 +150,33 @@ interface AddErrorAction {
 
 interface SetFunctionCallHandlerAction {
   type: SessionActionType.SET_FUNCTION_CALL_HANDLER;
-  payload: { sessionId: string; onFunctionCall: (name: string, args: Record<string, unknown>) => void };
+  payload: {
+    sessionId: string;
+    onFunctionCall: (name: string, args: Record<string, unknown>) => void;
+  };
 }
 
-
 // Union type for all actions
-type SessionAction = AddSessionAction | RemoveSessionAction | UpdateSessionAction | AddTranscriptAction | AddErrorAction | SetFunctionCallHandlerAction;
+type SessionAction =
+  | AddSessionAction
+  | RemoveSessionAction
+  | UpdateSessionAction
+  | AddTranscriptAction
+  | AddErrorAction
+  | SetFunctionCallHandlerAction;
 
 // Reducer state type
 type ChannelState = RealtimeSession[];
 
 // Reducer function
-export const sessionReducer = (state: ChannelState, action: SessionAction): ChannelState => {
+export const sessionReducer = (
+  state: ChannelState,
+  action: SessionAction
+): ChannelState => {
   switch (action.type) {
     case SessionActionType.ADD_SESSION:
       return [...state, action.payload]; // Add a new session to the state
-      
+
     case SessionActionType.REMOVE_SESSION:
       return state.filter((session) => session.id !== action.payload.id); // Remove session by ID
 
@@ -177,7 +191,10 @@ export const sessionReducer = (state: ChannelState, action: SessionAction): Chan
         session.id === action.payload.sessionId
           ? {
               ...session,
-              transcripts: [...(session.transcripts || []), action.payload.transcript],
+              transcripts: [
+                ...(session.transcripts || []),
+                action.payload.transcript,
+              ],
             }
           : session
       );
@@ -203,8 +220,9 @@ export const sessionReducer = (state: ChannelState, action: SessionAction): Chan
   }
 };
 
-
-export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const OpenAIRealtimeWebRTCProvider: React.FC<{
+  children: React.ReactNode;
+}> = ({ children }) => {
   const [sessions, dispatch] = useReducer(sessionReducer, []);
 
   // get session by id
@@ -219,30 +237,32 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
     const sessionId = realtimeSession.id;
     // Create a new peer connection
     const pc = new RTCPeerConnection();
-  
+
     // Attach local audio stream if AUDIO modality is enabled
     if (realtimeSession.modalities?.includes(Modality.AUDIO)) {
-      const localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      localStream.getAudioTracks().forEach((track) => pc.addTrack(track, localStream));
-      // Manage the remote stream
-    pc.ontrack = (event) => {
-      console.log(`Remote stream received for session '${sessionId}'.`);
-      // update the state for this session with event.streams[0] as mediaStream
-      dispatch({
-        type: SessionActionType.UPDATE_SESSION,
-        payload: {
-          id: sessionId,
-          mediaStream: event.streams[0],
-        },
+      const localStream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
       });
-    };
+      localStream
+        .getAudioTracks()
+        .forEach((track) => pc.addTrack(track, localStream));
+      // Manage the remote stream
+      pc.ontrack = (event) => {
+        console.log(`Remote stream received for session '${sessionId}'.`);
+        // update the state for this session with event.streams[0] as mediaStream
+        dispatch({
+          type: SessionActionType.UPDATE_SESSION,
+          payload: {
+            id: sessionId,
+            mediaStream: event.streams[0],
+          },
+        });
+      };
     }
-  
 
-  
     // Create and manage a data channel
     const dc = pc.createDataChannel(sessionId);
-  
+
     // Add a temporary session to state
     dispatch({
       type: SessionActionType.ADD_SESSION,
@@ -255,9 +275,9 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
         isConnected: false,
       } as RealtimeSession,
     });
-  
+
     // Add event listeners to handle data channel lifecycle
-    dc.addEventListener("open", () => {
+    dc.addEventListener('open', () => {
       dispatch({
         type: SessionActionType.UPDATE_SESSION,
         payload: {
@@ -268,26 +288,27 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
       });
       console.log(`Data channel for session '${sessionId}' is open.`);
     });
-  
-    dc.addEventListener("message", (e: MessageEvent<string>) => {
-      const event: RealtimeEvent = JSON.parse(e.data) as unknown as RealtimeEvent;
+
+    dc.addEventListener('message', (e: MessageEvent<string>) => {
+      const event: RealtimeEvent = JSON.parse(
+        e.data
+      ) as unknown as RealtimeEvent;
       switch (event.type) {
         /**
          * Triggered when an input audio transcription is completed.
          * This event provides the final transcript for the user's audio input.
-        */
+         */
         case RealtimeEventType.CONVERSATION_ITEM_INPUT_AUDIO_TRANSCRIPTION_COMPLETED:
           dispatch({
             type: SessionActionType.ADD_TRANSCRIPT,
             payload: {
-             sessionId,
-              transcript: 
-                {
-                  content: event.transcript,
-                  timestamp: Date.now(),
-                  type: TranscriptType.INPUT,
-                  role: ConversationRole.USER,
-                },
+              sessionId,
+              transcript: {
+                content: event.transcript,
+                timestamp: Date.now(),
+                type: TranscriptType.INPUT,
+                role: ConversationRole.USER,
+              },
             },
           });
           break;
@@ -300,13 +321,12 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
             type: SessionActionType.ADD_TRANSCRIPT,
             payload: {
               sessionId,
-              transcript:
-                {
-                  content: event.transcript,
-                  timestamp: Date.now(),
-                  type: TranscriptType.OUTPUT,
-                  role: ConversationRole.ASSISTANT,
-                },
+              transcript: {
+                content: event.transcript,
+                timestamp: Date.now(),
+                type: TranscriptType.OUTPUT,
+                role: ConversationRole.ASSISTANT,
+              },
             },
           });
           break;
@@ -323,46 +343,54 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
             },
           });
           break;
-        
-        
-      case RealtimeEventType.RESPONSE_OUTPUT_ITEM_DONE:
-        const responseEvent = event as ResponseOutputItemDoneEvent;
-        console.log(`Response received for session '${sessionId}':`, responseEvent);
-        // Check if it's a function call
-        if (responseEvent.item.type === ConversationItemType.FUNCTION_CALL) {
-          functionCallHandler?.(responseEvent.item.name as string, JSON.parse(responseEvent.item?.arguments || "{}"));
-        }
-        break;
-    
+
+        case RealtimeEventType.RESPONSE_OUTPUT_ITEM_DONE:
+          const responseEvent = event as ResponseOutputItemDoneEvent;
+          console.log(
+            `Response received for session '${sessionId}':`,
+            responseEvent
+          );
+          // Check if it's a function call
+          if (responseEvent.item.type === ConversationItemType.FUNCTION_CALL) {
+            functionCallHandler?.(
+              responseEvent.item.name as string,
+              JSON.parse(responseEvent.item?.arguments || '{}')
+            );
+          }
+          break;
+
         default:
           break;
       }
     });
-  
-    dc.addEventListener("close", () => {
+
+    dc.addEventListener('close', () => {
       console.log(`Session '${sessionId}' closed.`);
-      dispatch({ type: SessionActionType.REMOVE_SESSION, payload: { id: sessionId } });
+      dispatch({
+        type: SessionActionType.REMOVE_SESSION,
+        payload: { id: sessionId },
+      });
     });
-  
+
     // Create an SDP offer and send it to the OpenAI Realtime API
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
-  
+
     const response = await fetch(
       `https://api.openai.com/v1/realtime?model=${process.env.NEXT_PUBLIC_OPEN_AI_MODEL_ID}`,
       {
-        method: "POST",
+        method: 'POST',
         body: offer.sdp,
         headers: {
           Authorization: `Bearer ${realtimeSession.client_secret?.value}`,
-          "Content-Type": "application/sdp",
+          'Content-Type': 'application/sdp',
         },
       }
     );
-  
+
     // Apply the SDP answer from the response
-    const answer = { type: "answer" as RTCSdpType, sdp: await response.text() };
-    console.log({answer})
+    const answer = { type: 'answer' as RTCSdpType, sdp: await response.text() };
+    console.log({ answer });
     await pc.setRemoteDescription(answer);
   };
 
@@ -394,7 +422,10 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
     }
 
     // Remove the session from the state
-    dispatch({ type: SessionActionType.REMOVE_SESSION, payload: { id: sessionId } });
+    dispatch({
+      type: SessionActionType.REMOVE_SESSION,
+      payload: { id: sessionId },
+    });
     console.log(`Session '${sessionId}' removed.`);
   };
 
@@ -416,8 +447,10 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
     const { dataChannel } = session;
 
     // Ensure the data channel is open before sending the event
-    if (!dataChannel || dataChannel.readyState !== "open") {
-      console.error(`Data channel for session '${sessionId}' is not open. Cannot send event.`);
+    if (!dataChannel || dataChannel.readyState !== 'open') {
+      console.error(
+        `Data channel for session '${sessionId}' is not open. Cannot send event.`
+      );
       return;
     }
 
@@ -432,7 +465,6 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
       console.error(`Failed to send event to session '${sessionId}':`, error);
     }
   };
-
 
   /**
    * Sends a text message to a specific WebRTC session.
@@ -466,18 +498,20 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
    * @param sessionId - The unique identifier of the session to send the response to.
    * @param response - The response object to be sent.
    */
-  const createResponse = (sessionId: string, response: ResponseCreateBody = {}): void => {
-
+  const createResponse = (
+    sessionId: string,
+    response: ResponseCreateBody = {}
+  ): void => {
     // Create the response creation event
     const responseEvent: ResponseCreateEvent = {
       type: RealtimeEventType.RESPONSE_CREATE,
       event_id: crypto.randomUUID(),
       response,
     };
-    
+
     // Send the response creation event
     sendClientEvent(sessionId, responseEvent);
-    };
+  };
 
   /**
    * Sends a chunk of audio to a specific WebRTC session.
@@ -486,13 +520,13 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
    * @param audioData - The Base64-encoded audio chunk to be sent.
    */
   const sendAudioChunk = (sessionId: string, audioData: string): void => {
-  const audioChunkEvent: InputAudioBufferAppendEvent = {
-    type: RealtimeEventType.INPUT_AUDIO_BUFFER_APPEND,
-    event_id: crypto.randomUUID(), // Generate a unique event ID
-    audio: audioData,
-  };
+    const audioChunkEvent: InputAudioBufferAppendEvent = {
+      type: RealtimeEventType.INPUT_AUDIO_BUFFER_APPEND,
+      event_id: crypto.randomUUID(), // Generate a unique event ID
+      audio: audioData,
+    };
 
-  sendClientEvent(sessionId, audioChunkEvent);
+    sendClientEvent(sessionId, audioChunkEvent);
   };
 
   /**
@@ -501,18 +535,27 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
    * @param sessionId - The unique identifier of the session to commit the audio buffer for.
    */
   const commitAudioBuffer = (sessionId: string): void => {
-  const commitEvent: InputAudioBufferCommitEvent = {
-    type: RealtimeEventType.INPUT_AUDIO_BUFFER_COMMIT,
-    event_id: crypto.randomUUID(), // Generate a unique event ID
+    const commitEvent: InputAudioBufferCommitEvent = {
+      type: RealtimeEventType.INPUT_AUDIO_BUFFER_COMMIT,
+      event_id: crypto.randomUUID(), // Generate a unique event ID
+    };
+
+    sendClientEvent(sessionId, commitEvent);
   };
 
-  sendClientEvent(sessionId, commitEvent);
-  };
-
-  
   return (
     <OpenAIRealtimeWebRTCContext.Provider
-      value={{ sessions, getSessionById, startSession, closeSession, sendTextMessage, sendClientEvent, sendAudioChunk, commitAudioBuffer, createResponse }}
+      value={{
+        sessions,
+        getSessionById,
+        startSession,
+        closeSession,
+        sendTextMessage,
+        sendClientEvent,
+        sendAudioChunk,
+        commitAudioBuffer,
+        createResponse,
+      }}
     >
       {children}
     </OpenAIRealtimeWebRTCContext.Provider>

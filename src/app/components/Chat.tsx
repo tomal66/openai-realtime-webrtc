@@ -1,27 +1,27 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import WebRTCPlayer from "./WebRTCPlayer";
-import TextMessageInput from "./TextMessageInput";
-import PushToTalk from "./PushToTalk";
-import { useOpenAIRealtimeWebRTC } from "../context/OpenAIRealtimeWebRTC";
-import { SessionConfig, Modality, TurnDetectionConfig } from "../types";
-import tools from "./openAITools";
+import React, { useState } from 'react';
+import WebRTCPlayer from './WebRTCPlayer';
+import TextMessageInput from './TextMessageInput';
+import PushToTalk from './PushToTalk';
+import { useOpenAIRealtimeWebRTC } from '../context/OpenAIRealtimeWebRTC';
+import { SessionConfig, Modality, TurnDetectionConfig } from '../types';
+import tools from './openAITools';
 
 const defaultTurnDetection: TurnDetectionConfig = {
-  type: "server_vad",
+  type: 'server_vad',
   threshold: 0.5,
   prefix_padding_ms: 300,
   silence_duration_ms: 500,
 };
 
 const Chat: React.FC = () => {
-  const [sessionId, setSessionId] = useState<string>("");
-  const [mode, setMode] = useState<"vad" | "push-to-talk">("vad");
+  const [sessionId, setSessionId] = useState<string>('');
+  const [mode, setMode] = useState<'vad' | 'push-to-talk'>('vad');
   const [config, setConfig] = useState<SessionConfig>({
     modalities: [Modality.TEXT, Modality.AUDIO],
     input_audio_transcription: {
-      model: "whisper-1",
+      model: 'whisper-1',
     },
     instructions: `
       You are a fortune teller. You can see the future.
@@ -30,17 +30,13 @@ const Chat: React.FC = () => {
     tools,
   });
 
-  const {
-    startSession,
-    closeSession,
-    getSessionById,
-    sendClientEvent,
-  } = useOpenAIRealtimeWebRTC();
+  const { startSession, closeSession, getSessionById, sendClientEvent } =
+    useOpenAIRealtimeWebRTC();
 
   async function createNewSession(updatedConfig: SessionConfig) {
     const session = await (
-      await fetch("/api/session", {
-        method: "POST",
+      await fetch('/api/session', {
+        method: 'POST',
         body: JSON.stringify(updatedConfig),
       })
     ).json();
@@ -55,18 +51,18 @@ const Chat: React.FC = () => {
 
   const session = getSessionById(sessionId);
 
-  const handleModeChange = (newMode: "vad" | "push-to-talk") => {
+  const handleModeChange = (newMode: 'vad' | 'push-to-talk') => {
     setMode(newMode);
 
     const updatedConfig: SessionConfig = {
       ...config,
-      turn_detection: newMode === "vad" ? defaultTurnDetection : null,
+      turn_detection: newMode === 'vad' ? defaultTurnDetection : null,
     };
     setConfig(updatedConfig);
 
     if (sessionId && session?.isConnected) {
       sendClientEvent(sessionId, {
-        type: "session.update",
+        type: 'session.update',
         session: {
           turn_detection: updatedConfig.turn_detection,
         },
@@ -83,11 +79,11 @@ const Chat: React.FC = () => {
     console.log(`Function call received: ${name}`, args);
 
     switch (name) {
-      case "change_background":
+      case 'change_background':
         handleChangeBackground(args.color as string);
         break;
 
-      case "zoom_content":
+      case 'zoom_content':
         handleZoomContent(args.zoomLevel as number);
         break;
 
@@ -124,7 +120,7 @@ const Chat: React.FC = () => {
           <select
             value={mode}
             onChange={(e) =>
-              handleModeChange(e.target.value as "vad" | "push-to-talk")
+              handleModeChange(e.target.value as 'vad' | 'push-to-talk')
             }
             className="border border-gray-300 rounded px-2 py-1 bg-white text-gray-700"
           >
@@ -184,8 +180,8 @@ const Chat: React.FC = () => {
                   </p>
                 )}
                 <p className="text-xs text-gray-500">
-                  <strong>Event ID:</strong> {error.event_id} |{" "}
-                  <strong>Timestamp:</strong>{" "}
+                  <strong>Event ID:</strong> {error.event_id} |{' '}
+                  <strong>Timestamp:</strong>{' '}
                   {new Date(error.timestamp).toLocaleString()}
                 </p>
               </div>
@@ -204,13 +200,13 @@ const Chat: React.FC = () => {
               <div
                 key={index}
                 className={`mb-2 p-2 rounded ${
-                  transcript.role === "user"
-                    ? "bg-blue-100 text-blue-900"
-                    : "bg-green-100 text-green-900"
+                  transcript.role === 'user'
+                    ? 'bg-blue-100 text-blue-900'
+                    : 'bg-green-100 text-green-900'
                 }`}
               >
                 <p className="text-sm">
-                  <strong>{transcript.role === "user" ? "You" : "Bot"}</strong>{" "}
+                  <strong>{transcript.role === 'user' ? 'You' : 'Bot'}</strong>{' '}
                   <span className="text-gray-500 text-xs">
                     {new Date(transcript.timestamp).toLocaleTimeString()}
                   </span>
@@ -224,7 +220,7 @@ const Chat: React.FC = () => {
       {/* Mode-Based Input */}
       {session?.modalities?.includes(Modality.AUDIO) && (
         <div className="border-t pt-4">
-          {mode === "push-to-talk" ? (
+          {mode === 'push-to-talk' ? (
             <PushToTalk sessionId={sessionId} />
           ) : (
             <p className="text-gray-600 text-sm italic">
