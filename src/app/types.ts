@@ -35,6 +35,7 @@ export enum RealtimeEventType {
 
   // Response events
   RESPONSE_CREATED = "response.created",
+  RESPONSE_CREATE= "response.create",
   RESPONSE_OUTPUT_ITEM_ADDED = "response.output_item.added",
   RESPONSE_AUDIO_TRANSCRIPT_DELTA = "response.audio_transcript.delta",
   RESPONSE_AUDIO_TRANSCRIPT_DONE = "response.audio_transcript.done",
@@ -48,6 +49,11 @@ export enum RealtimeEventType {
 
   // Rate limit updates
   RATE_LIMITS_UPDATED = "rate_limits.updated",
+
+  // Input audio buffer events
+  INPUT_AUDIO_BUFFER_APPEND = "input_audio_buffer.append", // Appends audio data to the buffer
+  INPUT_AUDIO_BUFFER_COMMIT = "input_audio_buffer.commit", // Commits the buffer for processing
+  INPUT_AUDIO_BUFFER_CLEAR = "input_audio_buffer.clear", // Clears the audio buffer
 }
 
 /**
@@ -110,13 +116,98 @@ interface ResponseDoneEvent extends BaseRealtimeEvent {
 }
 
 /**
+ * Event for appending audio data to the input buffer.
+ */
+export interface InputAudioBufferAppendEvent extends BaseRealtimeEvent {
+  type: RealtimeEventType.INPUT_AUDIO_BUFFER_APPEND;
+  audio: string; // Base64-encoded audio data
+}
+
+/**
+ * Event for committing the input audio buffer for processing.
+ */
+export interface InputAudioBufferCommitEvent extends BaseRealtimeEvent {
+  type: RealtimeEventType.INPUT_AUDIO_BUFFER_COMMIT;
+}
+
+/**
+ * Event for clearing the input audio buffer.
+ */
+export interface InputAudioBufferClearEvent extends BaseRealtimeEvent {
+  type: RealtimeEventType.INPUT_AUDIO_BUFFER_CLEAR;
+}
+
+/**
+ * Event for creating a conversation item (e.g., sending a user message).
+ */
+export interface ConversationItemCreatedEvent extends BaseRealtimeEvent {
+  type: RealtimeEventType.CONVERSATION_ITEM_CREATED;
+  item: {
+    type: "message"; // Represents the type of conversation item
+    role: TranscriptRole.USER; // The role of the transcript, always USER for this event
+    content: Array<{
+      type: "input_text"; // Specifies the type of input
+      text: string; // The text content of the input message
+    }>;
+  };
+}
+
+/**
+ * Interface for creating a new response in the OpenAI Realtime API.
+ */
+export interface ResponseCreateBody {
+  modalities?: Modality[];
+  instructions?: string;
+  voice?: Voice;
+  output_audio_format?: AudioFormat;
+  tools?: Tool[];
+  tool_choice?: ToolChoice;
+  temperature?: number;
+  max_response_output_tokens?: number | "inf";
+  conversation?: "auto" | "none";
+  metadata?: Record<string, string>;
+  input?: Array<{
+    id?: string;
+    type: "message" | "function_call" | "function_call_output";
+    object: "realtime.item";
+    status?: "completed" | "incomplete";
+    role?: "user" | "assistant" | "system";
+    content?: Array<{
+      type: "input_text" | "input_audio" | "text";
+      text?: string;
+      audio?: string;
+    }>;
+    call_id?: string;
+    name?: string;
+    arguments?: string;
+    output?: string;
+  }>;
+}
+
+/**
+ * Event for creating a response manually.
+  */
+export interface ResponseCreateEvent extends BaseRealtimeEvent {
+  type: RealtimeEventType.RESPONSE_CREATE;
+  response: ResponseCreateBody | {};
+}
+  
+
+/**
  * Union type for all OpenAI WebRTC events.
  */
 export type RealtimeEvent =
   | InputAudioTranscriptionCompletedEvent
   | ResponseAudioTranscriptDoneEvent
   | ResponseCreatedEvent
-  | ResponseDoneEvent;
+  | ResponseDoneEvent
+  | InputAudioBufferAppendEvent
+  | InputAudioBufferCommitEvent
+  | InputAudioBufferClearEvent
+  | ConversationItemCreatedEvent
+  | ResponseCreateEvent;
+  ;
+
 
 /**
  * Interface representing a transcript in a session.

@@ -9,6 +9,11 @@ import {
   TranscriptType,
   TranscriptRole,
   RealtimeEvent,
+  InputAudioBufferAppendEvent,
+  InputAudioBufferCommitEvent,
+  ConversationItemCreatedEvent,
+  ResponseCreateEvent,
+  ResponseCreateBody
 } from "../types"
 
 
@@ -61,6 +66,28 @@ interface OpenAIRealtimeWebRTCContextType {
    * @param event - The custom event payload.
    */
   sendClientEvent: (sessionId: string, event: RealtimeEvent) => void;
+
+  /**
+   * Sends an audio chunk to a specific session for processing.
+   *
+   * @param sessionId - The unique identifier for the session to send the audio to.
+   * @param audioData - The Base64-encoded audio chunk to be sent.
+   */
+  sendAudioChunk: (sessionId: string, audioData: string) => void;
+
+  /**
+   * Commits the audio buffer for processing in a specific session.
+   *
+   * @param sessionId - The unique identifier for the session to commit the audio buffer for.
+   */
+  commitAudioBuffer: (sessionId: string) => void;
+
+  /**
+   * Creates a new response for a specific session.
+   * @param sessionId - The unique identifier for the session to send the response to.
+   * @param response - The response object to be sent.
+   */
+  createResponse: (sessionId: string, response?: unknown) => void;
 
 }
 
@@ -359,12 +386,13 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
    * @param message - The text message to be sent.
    */
   const sendTextMessage = (sessionId: string, message: string): void => {
-    // Create the event object for the user message
-    const userEvent = {
-      type: "conversation.item.create",
+    // Create the conversation item creation event
+    const userEvent: ConversationItemCreatedEvent = {
+      type: RealtimeEventType.CONVERSATION_ITEM_CREATED,
+      event_id: crypto.randomUUID(), // Generate a unique event ID
       item: {
         type: "message",
-        role: "user",
+        role: TranscriptRole.USER, // Role is 'user' as it's input
         content: [
           {
             type: "input_text",
@@ -376,18 +404,60 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
 
     // Send the user message event
     sendClientEvent(sessionId, userEvent);
+  };
 
-    // Optionally, send a follow-up event to trigger a response creation
-    const responseEvent = {
-      type: "response.create",
+  /**
+   * Creates a new response - Typically used for non VAD sessions.
+   * @param sessionId - The unique identifier of the session to send the response to.
+   * @param response - The response object to be sent.
+   */
+  const createResponse = (sessionId: string, response: ResponseCreateBody = {}): void => {
+
+    // Create the response creation event
+    const responseEvent: ResponseCreateEvent = {
+      type: RealtimeEventType.RESPONSE_CREATE,
+      event_id: crypto.randomUUID(),
+      response,
     };
+    
+    // Send the response creation event
     sendClientEvent(sessionId, responseEvent);
+    };
+
+  /**
+   * Sends a chunk of audio to a specific WebRTC session.
+   *
+   * @param sessionId - The unique identifier of the session to send the audio to.
+   * @param audioData - The Base64-encoded audio chunk to be sent.
+   */
+  const sendAudioChunk = (sessionId: string, audioData: string): void => {
+  const audioChunkEvent: InputAudioBufferAppendEvent = {
+    type: RealtimeEventType.INPUT_AUDIO_BUFFER_APPEND,
+    event_id: crypto.randomUUID(), // Generate a unique event ID
+    audio: audioData,
+  };
+
+  sendClientEvent(sessionId, audioChunkEvent);
+  };
+
+  /**
+   * Commits the audio buffer for processing in a specific WebRTC session.
+   *
+   * @param sessionId - The unique identifier of the session to commit the audio buffer for.
+   */
+  const commitAudioBuffer = (sessionId: string): void => {
+  const commitEvent: InputAudioBufferCommitEvent = {
+    type: RealtimeEventType.INPUT_AUDIO_BUFFER_COMMIT,
+    event_id: crypto.randomUUID(), // Generate a unique event ID
+  };
+
+  sendClientEvent(sessionId, commitEvent);
   };
 
 
   return (
     <OpenAIRealtimeWebRTCContext.Provider
-      value={{ sessions, getSessionById, startSession, closeSession, sendTextMessage, sendClientEvent }}
+      value={{ sessions, getSessionById, startSession, closeSession, sendTextMessage, sendClientEvent, sendAudioChunk, commitAudioBuffer, createResponse }}
     >
       {children}
     </OpenAIRealtimeWebRTCContext.Provider>
