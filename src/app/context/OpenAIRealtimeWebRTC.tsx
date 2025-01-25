@@ -7,14 +7,16 @@ import {
   RealtimeSession,
   RealtimeEventType,
   TranscriptType,
-  TranscriptRole,
+  ConversationRole,
   RealtimeEvent,
   InputAudioBufferAppendEvent,
   InputAudioBufferCommitEvent,
-  ConversationItemCreatedEvent,
   ResponseCreateEvent,
   ResponseCreateBody,
   ErrorEvent,
+  ConversationItemCreateEvent,
+  ConversationItemType,
+  ContentType,
 } from "../types"
 
 
@@ -270,7 +272,7 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
                   content: event.transcript,
                   timestamp: Date.now(),
                   type: TranscriptType.INPUT,
-                  role: TranscriptRole.USER,
+                  role: ConversationRole.USER,
                 },
             },
           });
@@ -289,7 +291,7 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
                   content: event.transcript,
                   timestamp: Date.now(),
                   type: TranscriptType.OUTPUT,
-                  role: TranscriptRole.MODEL,
+                  role: ConversationRole.ASSISTANT,
                 },
             },
           });
@@ -416,15 +418,15 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{ children: React.ReactNode 
    */
   const sendTextMessage = (sessionId: string, message: string): void => {
     // Create the conversation item creation event
-    const userEvent: ConversationItemCreatedEvent = {
-      type: RealtimeEventType.CONVERSATION_ITEM_CREATED,
+    const userEvent: ConversationItemCreateEvent = {
+      type: RealtimeEventType.CONVERSATION_ITEM_CREATE,
       event_id: crypto.randomUUID(), // Generate a unique event ID
       item: {
-        type: "message",
-        role: TranscriptRole.USER, // Role is 'user' as it's input
+        type: ConversationItemType.MESSAGE,
+        role: ConversationRole.USER, // Role is 'user' as it's input
         content: [
           {
-            type: "input_text",
+            type: ContentType.INPUT_TEXT,
             text: message,
           },
         ],

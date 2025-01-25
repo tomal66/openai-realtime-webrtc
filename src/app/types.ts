@@ -1,3 +1,23 @@
+
+/**
+ * Enum representing the type of a conversation item.
+ */
+export enum ConversationItemType {
+  MESSAGE = "message",
+  FUNCTION_CALL = "function_call",
+  FUNCTION_CALL_OUTPUT = "function_call_output",
+}
+
+/**
+ * Types of content in a message
+ */
+export enum ContentType {
+  INPUT_TEXT = "input_text",
+  INPUT_AUDIO = "input_audio",
+  ITEM_REFERENCE = "item_reference",
+  TEXT = "text",
+}
+
 /**
  * Enum representing the type of transcript.
  */
@@ -9,9 +29,107 @@ export enum TranscriptType {
 /**
  * Enum representing the role of a transcript.
  */
-export enum TranscriptRole {
+export enum ConversationRole {
   USER = "user",
-  MODEL = "model",
+  ASSISTANT = "assistant",
+  SYSTEM = "system",
+}
+
+  /**
+  * Status of a conversation item
+  */
+export enum ConversationItemStatus {
+  COMPLETED = "completed",
+  INCOMPLETE = "incomplete",
+}
+
+// Individual content item
+export interface ConversationContent {
+  /**
+   * The type of the content (e.g., input_text, input_audio, etc.).
+   */
+  type: ContentType;
+
+  /**
+   * The text content, used for input_text and text content types.
+   */
+  text?: string;
+
+  /**
+   * ID of a previous conversation item to reference (for item_reference content types).
+   */
+  id?: string;
+
+  /**
+   * Base64-encoded audio bytes, used for input_audio content type.
+   */
+  audio?: string;
+
+  /**
+   * The transcript of the audio, used for input_audio content type.
+   */
+  transcript?: string;
+}
+
+// Function call details for function_call and function_call_output items
+export interface FunctionCallDetails {
+  /**
+   * The ID of the function call.
+   */
+  call_id: string;
+
+  /**
+   * The name of the function being called.
+   */
+  name?: string;
+
+  /**
+   * The arguments of the function call.
+   */
+  arguments?: string;
+
+  /**
+   * The output of the function call.
+   */
+  output?: string;
+}
+
+// Conversation item structure
+export interface ConversationItem {
+  /**
+   * Unique ID of the item. If not provided, the server will generate one.
+   */
+  id?: string;
+
+  /**
+   * The type of the item (message, function_call, function_call_output).
+   */
+  type: ConversationItemType;
+
+  /**
+   * Identifier for the API object being returned, always "realtime.item".
+   */
+  object: "realtime.item";
+
+  /**
+   * Status of the item (completed, incomplete).
+   */
+  status?: ConversationItemStatus;
+
+  /**
+   * The role of the sender (user, assistant, system). Only applicable for message items.
+   */
+  role?: ConversationRole;
+
+  /**
+   * Content of the message. Applicable only for message items.
+   */
+  content?: ConversationContent[];
+
+  /**
+   * Function call details (for function_call and function_call_output items).
+   */
+  function_call_details?: FunctionCallDetails;
 }
 
 /**
@@ -32,6 +150,7 @@ export enum RealtimeEventType {
   CONVERSATION_ITEM_CREATED = "conversation.item.created",
   CONVERSATION_ITEM_INPUT_AUDIO_TRANSCRIPTION_COMPLETED = "conversation.item.input_audio_transcription.completed",
   CONVERSATION_ITEM_DELETED = "conversation.item.deleted",
+  CONVERSATION_ITEM_CREATE= "conversation.item.create",
 
   // Response events
   RESPONSE_CREATED = "response.created",
@@ -147,7 +266,7 @@ export interface ConversationItemCreatedEvent extends BaseRealtimeEvent {
   type: RealtimeEventType.CONVERSATION_ITEM_CREATED;
   item: {
     type: "message"; // Represents the type of conversation item
-    role: TranscriptRole.USER; // The role of the transcript, always USER for this event
+    role: ConversationRole.USER; // The role of the transcript, always USER for this event
     content: Array<{
       type: "input_text"; // Specifies the type of input
       text: string; // The text content of the input message
@@ -250,6 +369,35 @@ export interface ErrorEvent extends BaseRealtimeEvent {
     event_id: string | null; // The client event ID that caused the error, if applicable
   };
 }
+
+/**
+ * Event for creating a conversation item (e.g., sending a user message).
+ * Used to add a new item to the conversation context.
+ */
+export interface ConversationItemCreateEvent extends BaseRealtimeEvent {
+  type: RealtimeEventType.CONVERSATION_ITEM_CREATE;
+
+  /**
+   * The ID of the preceding item after which the new item will be inserted.
+   * - If not set, the new item will be appended to the end of the conversation.
+   * - If set to "root", the new item will be added to the beginning of the conversation.
+   * - If set to an existing ID, allows an item to be inserted mid-conversation.
+   * - If the ID cannot be found, an error will be returned.
+   */
+  previous_item_id?: string | null;
+
+  /**
+   * The item to add to the conversation.
+   */
+  item: {
+    id?: string;
+    type: ConversationItemType;
+    status?: ConversationItemStatus;
+    role?: ConversationRole;
+    content?: ConversationContent[];
+    function_call_details?: FunctionCallDetails;
+  };
+}
   
 
 /**
@@ -265,7 +413,8 @@ export type RealtimeEvent =
   | InputAudioBufferClearEvent
   | ConversationItemCreatedEvent
   | ResponseCreateEvent
-  | ErrorEvent;
+  | ErrorEvent
+  | ConversationItemCreateEvent;
 
 
 /**
@@ -290,7 +439,7 @@ export interface Transcript {
   /**
    * The role associated with the transcript, either "user" (input) or "model" (output).
    */
-  role: TranscriptRole;
+  role: ConversationRole;
 }
 
 
