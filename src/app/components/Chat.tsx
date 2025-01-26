@@ -7,6 +7,7 @@ import PushToTalk from './PushToTalk';
 import { useOpenAIRealtimeWebRTC } from '../context/OpenAIRealtimeWebRTC';
 import { SessionConfig, Modality, TurnDetectionConfig } from '../types';
 import tools from './openAITools';
+import Transcripts from './Transcripts';
 
 const defaultTurnDetection: TurnDetectionConfig = {
   type: 'server_vad',
@@ -191,31 +192,7 @@ const Chat: React.FC = () => {
       )}
 
       {/* Transcripts Box */}
-      {session?.transcripts && session?.transcripts?.length > 0 && (
-        <div className="overflow-y-auto h-64 border rounded p-4 bg-gray-50">
-          {session?.transcripts
-            .slice()
-            .reverse()
-            .map((transcript, index) => (
-              <div
-                key={index}
-                className={`mb-2 p-2 rounded ${
-                  transcript.role === 'user'
-                    ? 'bg-blue-100 text-blue-900'
-                    : 'bg-green-100 text-green-900'
-                }`}
-              >
-                <p className="text-sm">
-                  <strong>{transcript.role === 'user' ? 'You' : 'Bot'}</strong>{' '}
-                  <span className="text-gray-500 text-xs">
-                    {new Date(transcript.timestamp).toLocaleTimeString()}
-                  </span>
-                </p>
-                <p className="text-base">{transcript.content}</p>
-              </div>
-            ))}
-        </div>
-      )}
+      {session?.transcripts && session?.transcripts?.length > 0 && <Transcripts transcripts={session.transcripts} />}
 
       {/* Mode-Based Input */}
       {session?.modalities?.includes(Modality.AUDIO) && (
