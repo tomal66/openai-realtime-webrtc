@@ -224,14 +224,6 @@ interface ResponseCreatedEvent extends BaseRealtimeEvent {
 }
 
 /**
- * Event for response done.
- */
-interface ResponseDoneEvent extends BaseRealtimeEvent {
-  type: RealtimeEventType.RESPONSE_DONE;
-  response: unknown; // Replace with a detailed type if you have it
-}
-
-/**
  * Event for appending audio data to the input buffer.
  */
 export interface InputAudioBufferAppendEvent extends BaseRealtimeEvent {
@@ -610,7 +602,6 @@ export type RealtimeEvent =
   | InputAudioTranscriptionCompletedEvent
   | ResponseAudioTranscriptDoneEvent
   | ResponseCreatedEvent
-  | ResponseDoneEvent
   | InputAudioBufferAppendEvent
   | InputAudioBufferCommitEvent
   | InputAudioBufferClearEvent
