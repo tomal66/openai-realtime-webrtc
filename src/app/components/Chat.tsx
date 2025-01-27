@@ -8,6 +8,7 @@ import { useOpenAIRealtimeWebRTC } from '../context/OpenAIRealtimeWebRTC';
 import { SessionConfig, Modality, TurnDetectionConfig } from '../types';
 import tools from './openAITools';
 import Transcripts from './Transcripts';
+import TokenUsage from './TokenUsage';
 
 const defaultTurnDetection: TurnDetectionConfig = {
   type: 'server_vad',
@@ -116,6 +117,16 @@ const Chat: React.FC = () => {
       {/* Header Section */}
       <div className="flex justify-between items-center">
         <h1 className="text-xl font-bold text-gray-800">AI Chat</h1>
+        {/* Token Usage Section */}
+        {session?.tokenUsage && (
+          <div className="mt-2">
+            <TokenUsage
+              inputTokens={session.tokenUsage.inputTokens}
+              outputTokens={session.tokenUsage.outputTokens}
+              totalTokens={session.tokenUsage.totalTokens}
+            />
+          </div>
+        )}
         <div className="flex items-center space-x-4">
           {/* Mode Switcher */}
           <select
@@ -192,7 +203,9 @@ const Chat: React.FC = () => {
       )}
 
       {/* Transcripts Box */}
-      {session?.transcripts && session?.transcripts?.length > 0 && <Transcripts transcripts={session.transcripts} />}
+      {session?.transcripts && session?.transcripts?.length > 0 && (
+        <Transcripts transcripts={session.transcripts} />
+      )}
 
       {/* Mode-Based Input */}
       {session?.modalities?.includes(Modality.AUDIO) && (

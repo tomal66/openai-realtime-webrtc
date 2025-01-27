@@ -18,6 +18,8 @@ import {
   ConversationItemType,
   ContentType,
   ResponseOutputItemDoneEvent,
+  TokenUsage,
+  ResponseDoneEvent,
 } from '../types';
 
 /**
@@ -120,6 +122,7 @@ export enum SessionActionType {
   ADD_TRANSCRIPT = 'ADD_TRANSCRIPT',
   ADD_ERROR = 'ADD_ERROR',
   SET_FUNCTION_CALL_HANDLER = 'SET_FUNCTION_CALL_HANDLER',
+  UPDATE_TOKEN_USAGE = 'UPDATE_TOKEN_USAGE',
 }
 
 // Action interfaces for type safety
@@ -156,6 +159,15 @@ interface SetFunctionCallHandlerAction {
   };
 }
 
+interface UpdateTokenUsageAction {
+  type: SessionActionType.UPDATE_TOKEN_USAGE;
+
+  /**
+   * Payload containing the session ID and new token usage data.
+   */
+  payload: { sessionId: string; tokenUsage: TokenUsage };
+}
+
 // Union type for all actions
 type SessionAction =
   | AddSessionAction
@@ -163,7 +175,8 @@ type SessionAction =
   | UpdateSessionAction
   | AddTranscriptAction
   | AddErrorAction
-  | SetFunctionCallHandlerAction;
+  | SetFunctionCallHandlerAction
+  | UpdateTokenUsageAction;
 
 // Reducer state type
 type ChannelState = RealtimeSession[];
@@ -211,6 +224,12 @@ export const sessionReducer = (
       return state.map((session) =>
         session.id === action.payload.sessionId
           ? { ...session, onFunctionCall: action.payload.onFunctionCall }
+          : session
+      );
+    case SessionActionType.UPDATE_TOKEN_USAGE:
+      return state.map((session) =>
+        session.id === action.payload.sessionId
+          ? { ...session, tokenUsage: action.payload.tokenUsage }
           : session
       );
 
@@ -346,10 +365,6 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{
 
         case RealtimeEventType.RESPONSE_OUTPUT_ITEM_DONE:
           const responseEvent = event as ResponseOutputItemDoneEvent;
-          console.log(
-            `Response received for session '${sessionId}':`,
-            responseEvent
-          );
           // Check if it's a function call
           if (responseEvent.item.type === ConversationItemType.FUNCTION_CALL) {
             functionCallHandler?.(
@@ -359,6 +374,25 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{
           }
           break;
 
+        case RealtimeEventType.RESPONSE_DONE: {
+          const responseEvent = event as ResponseDoneEvent;
+          const usage = responseEvent.response?.usage;
+          if (usage) {
+            // Dispatch token usage to the reducer
+            dispatch({
+              type: SessionActionType.UPDATE_TOKEN_USAGE,
+              payload: {
+                sessionId,
+                tokenUsage: {
+                  inputTokens: usage.input_tokens,
+                  outputTokens: usage.output_tokens,
+                  totalTokens: usage.total_tokens,
+                },
+              },
+            });
+          }
+          break;
+        }
         default:
           break;
       }
