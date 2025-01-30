@@ -1,10 +1,16 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useOpenAIRealtimeWebRTC } from '../context/OpenAIRealtimeWebRTC';
 
-const TextMessageInput: React.FC<{ sessionId: string }> = ({ sessionId }) => {
-  const { sendTextMessage, createResponse } = useOpenAIRealtimeWebRTC();
+interface Props {
+  onNewMessage: (message: string) => void;
+  onGenerateResponse: () => void;
+}
+
+const TextMessageInput: React.FC<Props> = ({
+  onNewMessage,
+  onGenerateResponse,
+}) => {
   const [message, setMessage] = useState('');
 
   /**
@@ -12,7 +18,7 @@ const TextMessageInput: React.FC<{ sessionId: string }> = ({ sessionId }) => {
    */
   const handleSendMessage = () => {
     if (message.trim()) {
-      sendTextMessage(sessionId, message); // Send the message using the context function
+      onNewMessage(message); // Send the message using the context function
       setMessage(''); // Clear the input field
     }
   };
@@ -21,7 +27,7 @@ const TextMessageInput: React.FC<{ sessionId: string }> = ({ sessionId }) => {
    * Handle triggering the response generation explicitly (non-VAD mode).
    */
   const handleGenerateResponse = () => {
-    createResponse(sessionId); // Explicitly generate a response
+    onGenerateResponse(); // Trigger the response generation using the context function
   };
 
   /**

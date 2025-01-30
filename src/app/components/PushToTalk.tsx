@@ -1,15 +1,17 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { useOpenAIRealtimeWebRTC } from '../context/OpenAIRealtimeWebRTC';
 
-const PushToTalk: React.FC<{ sessionId: string }> = ({ sessionId }) => {
+interface Props {
+  onRecording: (base64Audio: string) => void;
+  onRecordingStopped: () => void;
+}
+
+const PushToTalk: React.FC<Props> = ({ onRecording, onRecordingStopped }) => {
   const [isRecording, setIsRecording] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
-  const { sendAudioChunk, commitAudioBuffer, createResponse } =
-    useOpenAIRealtimeWebRTC();
 
   const handleStartRecording = async () => {
     setIsRecording(true);
@@ -50,7 +52,7 @@ const PushToTalk: React.FC<{ sessionId: string }> = ({ sessionId }) => {
       );
 
       // Send the audio chunk to the session
-      sendAudioChunk(sessionId, base64Audio);
+      onRecording(base64Audio);
     };
   };
 
@@ -76,8 +78,7 @@ const PushToTalk: React.FC<{ sessionId: string }> = ({ sessionId }) => {
     }
 
     // Commit the audio buffer to the session
-    commitAudioBuffer(sessionId);
-    createResponse(sessionId);
+    onRecordingStopped();
   };
 
   return (

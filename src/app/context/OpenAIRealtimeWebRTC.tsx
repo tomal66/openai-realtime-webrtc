@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useReducer } from 'react';
+import React, { createContext, useContext, useReducer, useState } from 'react';
 import {
   Transcript,
   Modality,
@@ -20,6 +20,7 @@ import {
   ResponseOutputItemDoneEvent,
   TokenUsage,
   ResponseDoneEvent,
+  StartSession,
 } from '../types';
 
 /**
@@ -46,10 +47,7 @@ interface OpenAIRealtimeWebRTCContextType {
    * @param realtimeSession - The session object containing configuration.
    * @returns A promise that resolves once the session is successfully started.
    */
-  startSession: (
-    realtimeSession: RealtimeSession,
-    functionCallHandler?: (name: string, args: Record<string, unknown>) => void
-  ) => Promise<void>;
+  startSession: StartSession;
 
   /**
    * Ends an active WebRTC session and cleans up its resources.
@@ -237,6 +235,69 @@ export const sessionReducer = (
       // Ensure exhaustive checks in TypeScript
       throw new Error(`Unhandled action type: ${action}`);
   }
+};
+
+export const useSession = (id?: string | undefined) => {
+  const [sessionId, setSessionId] = useState<string | undefined>(id);
+  const {
+    getSessionById,
+    closeSession,
+    sendTextMessage,
+    sendClientEvent,
+    sendAudioChunk,
+    commitAudioBuffer,
+    createResponse,
+    startSession,
+  } = useOpenAIRealtimeWebRTC();
+
+  const handleStartSession: StartSession = async (
+    newSession: RealtimeSession,
+    ...rest
+  ) => {
+    await startSession(newSession, ...rest);
+    setSessionId(newSession.id);
+  };
+
+  const session = sessionId ? getSessionById(sessionId) : undefined;
+
+  if (!session || !sessionId) {
+    return {
+      session,
+      startSession: (newSession: RealtimeSession) =>
+        handleStartSession(newSession),
+      closeSession: () => {
+        throw new Error('Session not started');
+      },
+      sendTextMessage: () => {
+        throw new Error('Session not started');
+      },
+      sendClientEvent: () => {
+        throw new Error('Session not started');
+      },
+      sendAudioChunk: () => {
+        throw new Error('Session not started');
+      },
+      commitAudioBuffer: () => {
+        throw new Error('Session not started');
+      },
+      createResponse: () => {
+        throw new Error('Session not started');
+      },
+    };
+  }
+
+  return {
+    session,
+    closeSession: () => closeSession(sessionId),
+    sendTextMessage: (message: string) => sendTextMessage(sessionId, message),
+    sendClientEvent: (event: RealtimeEvent) =>
+      sendClientEvent(sessionId, event),
+    sendAudioChunk: (audioData: string) => sendAudioChunk(sessionId, audioData),
+    commitAudioBuffer: () => commitAudioBuffer(sessionId),
+    createResponse: (response?: ResponseCreateBody) =>
+      createResponse(sessionId, response),
+    startSession: startSession,
+  };
 };
 
 export const OpenAIRealtimeWebRTCProvider: React.FC<{

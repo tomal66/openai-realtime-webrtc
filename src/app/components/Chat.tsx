@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import WebRTCPlayer from './WebRTCPlayer';
 import TextMessageInput from './TextMessageInput';
 import PushToTalk from './PushToTalk';
-import { useOpenAIRealtimeWebRTC } from '../context/OpenAIRealtimeWebRTC';
+import { useSession } from '../context/OpenAIRealtimeWebRTC';
 import { SessionConfig, Modality, TurnDetectionConfig } from '../types';
 import tools from './openAITools';
 import Transcripts from './Transcripts';
@@ -18,7 +18,6 @@ const defaultTurnDetection: TurnDetectionConfig = {
 };
 
 const Chat: React.FC = () => {
-  const [sessionId, setSessionId] = useState<string>('');
   const [mode, setMode] = useState<'vad' | 'push-to-talk'>('vad');
   const [config, setConfig] = useState<SessionConfig>({
     modalities: [Modality.TEXT, Modality.AUDIO],
@@ -32,8 +31,16 @@ const Chat: React.FC = () => {
     tools,
   });
 
-  const { startSession, closeSession, getSessionById, sendClientEvent } =
-    useOpenAIRealtimeWebRTC();
+  const {
+    startSession,
+    sendClientEvent,
+    closeSession,
+    session,
+    sendAudioChunk,
+    commitAudioBuffer,
+    createResponse,
+    sendTextMessage,
+  } = useSession();
 
   async function createNewSession(updatedConfig: SessionConfig) {
     const session = await (
@@ -48,10 +55,7 @@ const Chat: React.FC = () => {
   async function onSessionStart() {
     const newSession = await createNewSession(config);
     startSession({ ...newSession }, handleFunctionCall);
-    setSessionId(newSession.id);
   }
-
-  const session = getSessionById(sessionId);
 
   const handleModeChange = (newMode: 'vad' | 'push-to-talk') => {
     setMode(newMode);
@@ -62,8 +66,8 @@ const Chat: React.FC = () => {
     };
     setConfig(updatedConfig);
 
-    if (sessionId && session?.isConnected) {
-      sendClientEvent(sessionId, {
+    if (session?.isConnected) {
+      sendClientEvent({
         type: 'session.update',
         session: {
           turn_detection: updatedConfig.turn_detection,
@@ -143,7 +147,7 @@ const Chat: React.FC = () => {
           {/* Start/End Session Button */}
           {session?.isConnected ? (
             <button
-              onClick={() => closeSession(sessionId)}
+              onClick={() => closeSession()}
               className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
             >
               End Session
@@ -211,7 +215,15 @@ const Chat: React.FC = () => {
       {session?.modalities?.includes(Modality.AUDIO) && (
         <div className="border-t pt-4">
           {mode === 'push-to-talk' ? (
-            <PushToTalk sessionId={sessionId} />
+            <PushToTalk
+              onRecording={(audio) => {
+                sendAudioChunk(audio);
+              }}
+              onRecordingStopped={() => {
+                commitAudioBuffer();
+                createResponse();
+              }}
+            />
           ) : (
             <p className="text-gray-600 text-sm italic">
               Voice Activity Detection (VAD) mode enabled. Start speaking to
@@ -224,7 +236,14 @@ const Chat: React.FC = () => {
       {/* Text Message Input */}
       {session?.modalities?.includes(Modality.TEXT) && (
         <div className="border-t pt-4">
-          <TextMessageInput sessionId={sessionId} />
+          <TextMessageInput
+            onNewMessage={(message) => {
+              sendTextMessage(message);
+            }}
+            onGenerateResponse={() => {
+              createResponse();
+            }}
+          />
         </div>
       )}
     </div>

@@ -1015,3 +1015,13 @@ export interface TokenUsage {
    */
   totalTokens: number;
 }
+
+export type FunctionCallHandler = (
+  name: string,
+  args: Record<string, unknown>
+) => void;
+
+export type StartSession = (
+  realtimeSession: RealtimeSession,
+  functionCallHandler?: FunctionCallHandler
+) => void;
