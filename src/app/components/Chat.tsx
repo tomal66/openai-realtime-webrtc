@@ -5,13 +5,19 @@ import WebRTCPlayer from './WebRTCPlayer';
 import TextMessageInput from './TextMessageInput';
 import PushToTalk from './PushToTalk';
 import { useSession } from '../context/OpenAIRealtimeWebRTC';
-import { SessionConfig, Modality, TurnDetectionConfig } from '../types';
+import {
+  SessionConfig,
+  Modality,
+  TurnDetectionConfig,
+  TurnDetectionType,
+  RealtimeEventType,
+} from '../types';
 import tools from './openAITools';
 import Transcripts from './Transcripts';
 import TokenUsage from './TokenUsage';
 
 const defaultTurnDetection: TurnDetectionConfig = {
-  type: 'server_vad',
+  type: TurnDetectionType.SERVER_VAD,
   threshold: 0.5,
   prefix_padding_ms: 300,
   silence_duration_ms: 500,
@@ -68,7 +74,7 @@ const Chat: React.FC = () => {
 
     if (session?.isConnected) {
       sendClientEvent({
-        type: 'session.update',
+        type: RealtimeEventType.SESSION_UPDATE,
         session: {
           turn_detection: updatedConfig.turn_detection,
         },

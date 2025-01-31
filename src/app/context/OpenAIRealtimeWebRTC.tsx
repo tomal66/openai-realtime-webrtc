@@ -21,6 +21,7 @@ import {
   TokenUsage,
   ResponseDoneEvent,
   StartSession,
+  SessionError,
 } from '../types';
 
 /**
@@ -146,7 +147,7 @@ interface AddTranscriptAction {
 
 interface AddErrorAction {
   type: SessionActionType.ADD_ERROR;
-  payload: { sessionId: string; error: ErrorEvent };
+  payload: { sessionId: string; error: SessionError };
 }
 
 interface SetFunctionCallHandlerAction {
@@ -419,7 +420,7 @@ export const OpenAIRealtimeWebRTCProvider: React.FC<{
             type: SessionActionType.ADD_ERROR,
             payload: {
               sessionId,
-              error: event as ErrorEvent,
+              error: event.error,
             },
           });
           break;

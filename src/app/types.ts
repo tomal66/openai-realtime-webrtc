@@ -133,6 +133,7 @@ export enum RealtimeEventType {
   // Session events
   SESSION_CREATED = 'session.created',
   SESSION_UPDATED = 'session.updated',
+  SESSION_UPDATE = 'session.update',
 
   // Input audio buffer events
   INPUT_AUDIO_SPEECH_STARTED = 'input_audio_buffer.speech_started',
@@ -185,7 +186,7 @@ interface BaseRealtimeEvent {
   /**
    * Unique identifier for the event.
    */
-  event_id: string;
+  event_id?: string;
 
   /**
    * Timestamp of the event (optional for debugging/logging purposes).
@@ -346,13 +347,7 @@ export interface ResponseCreateEvent extends BaseRealtimeEvent {
  */
 export interface ErrorEvent extends BaseRealtimeEvent {
   type: RealtimeEventType.ERROR;
-  error: {
-    type: string; // Error type (e.g., "invalid_request_error", "server_error")
-    code: string | null; // Error code, if available
-    message: string; // Human-readable error message
-    param: string | null; // Parameter related to the error, if any
-    event_id: string | null; // The client event ID that caused the error, if applicable
-  };
+  error: SessionError;
 }
 
 /**
@@ -596,6 +591,14 @@ export interface ResponseDoneEvent extends BaseRealtimeEvent {
 }
 
 /**
+ * Event for updating the session configuration.
+ */
+interface UpdateSessionConfigEvent extends BaseRealtimeEvent {
+  type: RealtimeEventType.SESSION_UPDATE;
+  session: Partial<RealtimeSession>;
+}
+
+/**
  * Union type for all OpenAI WebRTC events.
  */
 export type RealtimeEvent =
@@ -610,7 +613,8 @@ export type RealtimeEvent =
   | ErrorEvent
   | ConversationItemCreateEvent
   | ResponseOutputItemDoneEvent
-  | ResponseDoneEvent;
+  | ResponseDoneEvent
+  | UpdateSessionConfigEvent;
 
 /**
  * Interface representing a transcript in a session.
