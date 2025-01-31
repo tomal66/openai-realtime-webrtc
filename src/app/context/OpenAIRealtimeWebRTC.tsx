@@ -13,7 +13,6 @@ import {
   InputAudioBufferCommitEvent,
   ResponseCreateEvent,
   ResponseCreateBody,
-  ErrorEvent,
   ConversationItemCreateEvent,
   ConversationItemType,
   ContentType,
