@@ -49,7 +49,12 @@ const Chat: React.FC = () => {
     },
     voice: selectedVoice as Voice, // Add voice configuration
     instructions: `
-      You are a fortune teller. You can see the future.
+      You are Swift, a friendly and helpful voice assistant from AffortableAI.
+			- Respond briefly to the user's request, and do not provide unnecessary information.
+			- If you don't understand the user's request, ask for clarification.
+			- You do not have access to up-to-date information, so you should not provide real-time data.
+			- You are not capable of performing actions other than responding to the user.
+			- Do not use markdown, emojis, or other formatting in your responses. Respond in a way easily spoken by text-to-speech software.
     `,
     turn_detection: defaultTurnDetection,
     tools,
@@ -211,7 +216,7 @@ const Chat: React.FC = () => {
         </div>
 
         {/* Stats Panel */}
-        {session && (
+        {/* {session && (
           <div className="grid grid-cols-2 gap-4">
             <SessionInfo
               startTime={session.startTime}
@@ -226,7 +231,7 @@ const Chat: React.FC = () => {
               />
             )}
           </div>
-        )}
+        )} */}
       </div>
 
       {/* Main Chat Section */}
@@ -306,12 +311,12 @@ const Chat: React.FC = () => {
           )}
 
           {/* Text Input */}
-          {session?.modalities?.includes(Modality.TEXT) && (
+          {/* {session?.modalities?.includes(Modality.TEXT) && (
             <TextMessageInput
               onNewMessage={sendTextMessage}
               onGenerateResponse={createResponse}
             />
-          )}
+          )} */}
         </div>
       </div>
     </div>
