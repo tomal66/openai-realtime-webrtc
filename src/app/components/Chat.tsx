@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import WebRTCPlayer from './WebRTCPlayer';
-import TextMessageInput from './TextMessageInput';
+// import TextMessageInput from './TextMessageInput';
 import PushToTalk from './PushToTalk';
 import { useSession } from '../context/OpenAIRealtimeWebRTC';
 import {
@@ -15,8 +15,8 @@ import {
 } from '../types';
 import tools from './openAITools';
 import Transcripts from './Transcripts';
-import TokenUsage from './TokenUsage';
-import SessionInfo from './SessionInfo';
+// import TokenUsage from './TokenUsage';
+// import SessionInfo from './SessionInfo';
 
 // Add voice options based on OpenAI's available voices
 const VOICE_OPTIONS = {
@@ -68,7 +68,7 @@ const Chat: React.FC = () => {
     sendAudioChunk,
     commitAudioBuffer,
     createResponse,
-    sendTextMessage,
+    // sendTextMessage,
     muteSessionAudio,
     unmuteSessionAudio,
   } = useSession();
